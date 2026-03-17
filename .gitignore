@@ -1,0 +1,71 @@
+# Compiled objects
+*.o
+*.obj
+
+# Executables
+*.out
+*.exe
+a.out
+
+# Libraries
+*.a
+*.so
+*.dylib
+
+# Preprocessor output
+*.i
+
+# Assembly output
+*.s
+
+# Debug
+*.dSYM/
+*.pdb
+
+# Valgrind
+vgcore.*
+valgrind-out.txt
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build directories
+build/
+bin/
+obj/
+
+# Compiled binaries in module directories
+# Ignore everything in exercises/ and solutions/ then un-ignore source files
+**/exercises/*
+!**/exercises/*.c
+!**/exercises/*.h
+!**/exercises/*.sh
+!**/exercises/*.py
+!**/exercises/*.txt
+!**/exercises/Makefile
+**/solutions/*
+!**/solutions/*.c
+!**/solutions/*.h
+!**/solutions/*.sh
+!**/solutions/*.py
+!**/solutions/*.txt
+!**/solutions/Makefile
+**/sol-*
+
+# Generated images
+*.ppm
+*.bmp
+*.png
+!assets/**/*.png
+
+# Core dumps
+core
+core.*

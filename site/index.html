@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C Katas — Systems Programming from First Principles</title>
+
+    <!-- CodeMirror 6 via esm.sh (shared dependency resolution) -->
+
+    <style>
+        :root {
+            --bg: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --accent-hover: #79c0ff;
+            --green: #3fb950;
+            --yellow: #d29922;
+            --red: #f85149;
+            --purple: #bc8cff;
+            --sidebar-width: 320px;
+            --header-height: 56px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 100;
+            gap: 16px;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+        }
+
+        header h1 span {
+            color: var(--accent);
+        }
+
+        .header-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .progress-bar-container {
+            width: 200px;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--green);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 13px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            padding: 16px 0;
+            z-index: 90;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 89;
+        }
+
+        .phase-group {
+            margin-bottom: 8px;
+        }
+
+        .phase-header {
+            padding: 8px 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            user-select: none;
+        }
+
+        .phase-header:hover {
+            color: var(--text);
+        }
+
+        .phase-header .chevron {
+            font-size: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .phase-header.collapsed .chevron {
+            transform: rotate(-90deg);
+        }
+
+        .phase-modules {
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .phase-modules.collapsed {
+            max-height: 0 !important;
+        }
+
+        .module-link {
+            display: flex;
+            align-items: center;
+            padding: 6px 20px 6px 28px;
+            font-size: 14px;
+            color: var(--text-muted);
+            text-decoration: none;
+            cursor: pointer;
+            gap: 8px;
+            border-left: 2px solid transparent;
+            transition: all 0.15s ease;
+        }
+
+        .module-link:hover {
+            color: var(--text);
+            background: var(--bg-tertiary);
+        }
+
+        .module-link.active {
+            color: var(--text);
+            background: var(--bg-tertiary);
+            border-left-color: var(--accent);
+        }
+
+        .module-link .status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: 1.5px solid var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .module-link .status.completed {
+            background: var(--green);
+            border-color: var(--green);
+        }
+
+        .module-link .status.available {
+            border-color: var(--accent);
+        }
+
+        .module-link .module-number {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            min-width: 28px;
+        }
+
+        .module-link .module-title {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Main content */
+        .main {
+            margin-left: var(--sidebar-width);
+            margin-top: var(--header-height);
+            min-height: calc(100vh - var(--header-height));
+        }
+
+        .content {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 40px 40px 80px;
+        }
+
+        /* Welcome page */
+        .welcome {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .welcome h2 {
+            font-size: 36px;
+            margin-bottom: 16px;
+        }
+
+        .welcome p {
+            font-size: 18px;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .welcome .start-btn {
+            display: inline-block;
+            padding: 12px 32px;
+            background: var(--accent);
+            color: var(--bg);
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            transition: background 0.15s ease;
+        }
+
+        .welcome .start-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            max-width: 600px;
+            margin: 40px auto 0;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .stat-card .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-card .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Markdown content */
+        .markdown-body h1 {
+            font-size: 32px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+        }
+
+        .markdown-body h2 {
+            font-size: 24px;
+            margin-top: 40px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            margin-top: 32px;
+            margin-bottom: 12px;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            margin-top: 24px;
+            margin-bottom: 8px;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 28px;
+        }
+
+        .markdown-body li {
+            margin-bottom: 4px;
+        }
+
+        .markdown-body li ul, .markdown-body li ol {
+            margin-bottom: 4px;
+            margin-top: 4px;
+        }
+
+        .markdown-body code {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.9em;
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .markdown-body pre {
+            background: #282c34;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0;
+            overflow-x: auto;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .markdown-body pre code {
+            background: none;
+            padding: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            display: block;
+            counter-reset: line;
+        }
+
+        /* Line numbers for markdown code blocks */
+        .markdown-body pre code.line-numbers .code-line {
+            display: block;
+            padding-left: 3.5em;
+            position: relative;
+        }
+
+        .markdown-body pre code.line-numbers .code-line::before {
+            counter-increment: line;
+            content: counter(line);
+            position: absolute;
+            left: 0;
+            width: 2.5em;
+            text-align: right;
+            color: #636d83;
+            font-size: 12px;
+            padding-right: 0.5em;
+            user-select: none;
+            border-right: 1px solid #3e4451;
+            margin-right: 1em;
+        }
+
+        /* Language badge on code blocks */
+        .markdown-body pre .code-lang-badge {
+            position: absolute;
+            top: 6px;
+            right: 10px;
+            font-size: 11px;
+            color: #636d83;
+            font-family: -apple-system, sans-serif;
+            text-transform: uppercase;
+            user-select: none;
+            z-index: 1;
+        }
+
+        .markdown-body pre code {
+            background: none;
+            padding: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* Syntax highlighting for inline code blocks (One Dark theme) */
+        .markdown-body pre .kw { color: #c678dd; }       /* keywords */
+        .markdown-body pre .type { color: #e5c07b; }     /* types */
+        .markdown-body pre .func { color: #61afef; }     /* functions */
+        .markdown-body pre .str { color: #98c379; }      /* strings */
+        .markdown-body pre .num { color: #d19a66; }      /* numbers */
+        .markdown-body pre .cmt { color: #5c6370; font-style: italic; } /* comments */
+        .markdown-body pre .prep { color: #c678dd; }     /* preprocessor */
+        .markdown-body pre .inc { color: #98c379; }      /* include paths */
+        .markdown-body pre .op { color: #56b6c2; }       /* operators */
+
+        .markdown-body blockquote {
+            border-left: 3px solid var(--accent);
+            padding-left: 16px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-tertiary);
+            font-weight: 600;
+        }
+
+        .markdown-body strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .markdown-body a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 32px 0;
+        }
+
+        .markdown-body img {
+            max-width: 100%;
+        }
+
+        /* Navigation buttons */
+        .lesson-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .lesson-nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            transition: border-color 0.15s ease;
+        }
+
+        .lesson-nav-btn:hover {
+            border-color: var(--accent);
+        }
+
+        .lesson-nav-btn.disabled {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .lesson-nav-btn .nav-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .lesson-nav-btn .nav-title {
+            font-weight: 500;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: var(--text-muted);
+        }
+
+        .error-msg {
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid var(--red);
+            border-radius: 8px;
+            padding: 16px;
+            color: var(--red);
+        }
+
+        /* Source file viewer */
+        .file-tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid var(--border);
+            margin-top: 32px;
+            margin-bottom: 0;
+            overflow-x: auto;
+        }
+
+        .file-tab {
+            padding: 8px 16px;
+            font-size: 13px;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            color: var(--text-muted);
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            white-space: nowrap;
+            background: none;
+            transition: all 0.15s ease;
+        }
+
+        .file-tab:hover {
+            color: var(--text);
+        }
+
+        .file-tab.active {
+            color: var(--text);
+            background: var(--bg-tertiary);
+            border-color: var(--border);
+        }
+
+        .file-content {
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        /* CodeMirror overrides for file viewer */
+        .file-content .cm-editor {
+            font-size: 14px;
+            max-height: 600px;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .file-content .cm-editor .cm-scroller {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
+            line-height: 1.6;
+        }
+
+        .file-content .cm-editor .cm-gutters {
+            border-right: 1px solid #3e4451;
+        }
+
+        /* Fallback for when CodeMirror hasn't loaded */
+        .file-content pre {
+            margin: 0;
+            background: #282c34;
+            border: none;
+            padding: 16px;
+            max-height: 600px;
+            overflow: auto;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .file-content code {
+            font-size: 14px;
+            line-height: 1.6;
+            background: none;
+            padding: 0;
+        }
+
+        /* Search */
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            margin: 0 0 8px;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+        }
+
+        .search-container {
+            padding: 8px 16px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.visible {
+                display: block;
+            }
+
+            .main {
+                margin-left: 0;
+            }
+
+            .content {
+                padding: 24px 16px 60px;
+            }
+
+            .progress-bar-container {
+                width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <button class="menu-toggle" id="menuToggle">&#9776;</button>
+    <h1><span>C</span> Katas</h1>
+    <div class="header-right">
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        <span class="progress-text" id="progressText">0 / 0</span>
+    </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<nav class="sidebar" id="sidebar">
+    <div class="search-container">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search modules...">
+    </div>
+    <div id="sidebarContent"></div>
+</nav>
+
+<main class="main">
+    <div class="content" id="mainContent">
+    </div>
+</main>
+
+<script type="module">
+
+// ── CodeMirror 6 setup (esm.sh shares @codemirror/state across all imports) ──
+let cmReady = false;
+let cmEditorView, cmBasicSetup, cmCpp, cmOneDark;
+
+async function loadCodeMirror() {
+    try {
+        const [cmMod, cppMod, themeMod] = await Promise.all([
+            import("https://esm.sh/codemirror"),
+            import("https://esm.sh/@codemirror/lang-cpp"),
+            import("https://esm.sh/@codemirror/theme-one-dark"),
+        ]);
+        cmEditorView = cmMod.EditorView;
+        cmBasicSetup = cmMod.basicSetup;
+        cmCpp = cppMod.cpp;
+        cmOneDark = themeMod.oneDark;
+        cmReady = true;
+    } catch (e) {
+        console.warn("CodeMirror failed to load, using fallback highlighter:", e);
+    }
+}
+
+function createEditor(container, code, lang) {
+    if (!cmReady) return false;
+    container.innerHTML = "";
+    const isC = ["c", "h", "cpp", "sh"].includes(lang);
+    const extensions = [
+        cmBasicSetup,
+        cmOneDark,
+        cmEditorView.editable.of(false),
+        cmEditorView.theme({
+            "&": { backgroundColor: "#282c34" },
+            ".cm-gutters": { backgroundColor: "#282c34", color: "#636d83", borderRight: "1px solid #3e4451" },
+            ".cm-activeLineGutter": { backgroundColor: "#2c313a" },
+            ".cm-activeLine": { backgroundColor: "#2c313a44" },
+            ".cm-scroller": { fontFamily: "'SF Mono', 'Fira Code', 'Consolas', 'Monaco', monospace" },
+        }),
+    ];
+    if (isC) extensions.push(cmCpp());
+    new cmEditorView({
+        doc: code,
+        extensions,
+        parent: container,
+    });
+    return true;
+}
+
+// Start loading CodeMirror in background
+const cmLoading = loadCodeMirror();
+
+// ── Custom C syntax highlighter (fallback for markdown code blocks) ──
+
+// ── Simple C syntax highlighter for markdown code blocks ────────────
+function highlightC(code) {
+    // Tokenize and wrap with spans
+    const escaped = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    let result = escaped;
+
+    // Order matters — process in a single pass to avoid double-replacing
+    const tokens = [];
+    const re = /\/\/[^\n]*|\/\*[\s\S]*?\*\/|#\s*(?:include|define|ifdef|ifndef|endif|if|else|elif|pragma|undef|error|warning)\b[^\n]*|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)'|\b(?:void|int|char|short|long|float|double|unsigned|signed|const|static|extern|struct|union|enum|typedef|size_t|uint8_t|uint16_t|uint32_t|uint64_t|int8_t|int16_t|int32_t|int64_t|bool|_Bool|FILE|NULL)\b|\b(?:if|else|for|while|do|switch|case|default|break|continue|return|goto|sizeof|typeof)\b|\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?[fFlLuU]*\b|\b0[xX][0-9a-fA-F]+[uUlL]*\b|\b[a-zA-Z_]\w*(?=\s*\()/g;
+
+    let parts = [];
+    let lastIndex = 0;
+    let match;
+    const src = escaped;
+
+    // Reset regex
+    re.lastIndex = 0;
+    while ((match = re.exec(src)) !== null) {
+        if (match.index > lastIndex) {
+            parts.push(src.slice(lastIndex, match.index));
+        }
+        const m = match[0];
+        if (m.startsWith("//") || m.startsWith("/*")) {
+            parts.push(`<span class="cmt">${m}</span>`);
+        } else if (m.startsWith("#")) {
+            // Split preprocessor: directive vs include path
+            const incMatch = m.match(/^(#\s*include\s*)(&lt;[^&]*&gt;|"[^"]*")(.*)$/);
+            if (incMatch) {
+                parts.push(`<span class="prep">${incMatch[1]}</span><span class="inc">${incMatch[2]}</span>${incMatch[3]}`);
+            } else {
+                parts.push(`<span class="prep">${m}</span>`);
+            }
+        } else if (m.startsWith('"') || m.startsWith("'")) {
+            parts.push(`<span class="str">${m}</span>`);
+        } else if (/^(?:void|int|char|short|long|float|double|unsigned|signed|const|static|extern|struct|union|enum|typedef|size_t|uint8_t|uint16_t|uint32_t|uint64_t|int8_t|int16_t|int32_t|int64_t|bool|_Bool|FILE|NULL)$/.test(m)) {
+            parts.push(`<span class="type">${m}</span>`);
+        } else if (/^(?:if|else|for|while|do|switch|case|default|break|continue|return|goto|sizeof|typeof)$/.test(m)) {
+            parts.push(`<span class="kw">${m}</span>`);
+        } else if (/^\d|^0[xX]/.test(m)) {
+            parts.push(`<span class="num">${m}</span>`);
+        } else if (/\($/.test(src.slice(match.index, match.index + m.length + 5))) {
+            // Function call
+            parts.push(`<span class="func">${m}</span>`);
+        } else {
+            parts.push(m);
+        }
+        lastIndex = match.index + m.length;
+    }
+    if (lastIndex < src.length) {
+        parts.push(src.slice(lastIndex));
+    }
+    return parts.join("");
+}
+
+function highlightCodeBlock(code, lang) {
+    const isC = ["c", "h", "cpp"].includes(lang);
+    const escaped = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    let highlighted;
+    if (isC) {
+        highlighted = highlightC(code);
+    } else {
+        highlighted = escaped;
+    }
+
+    // Add line numbers
+    const lines = highlighted.split("\n");
+    // Remove trailing empty line
+    if (lines[lines.length - 1] === "") lines.pop();
+    const numberedLines = lines.map(line => `<span class="code-line">${line}</span>`).join("\n");
+
+    const badge = lang ? `<span class="code-lang-badge">${lang}</span>` : "";
+    return `<pre>${badge}<code class="line-numbers">${numberedLines}</code></pre>`;
+}
+
+// Module data — the source of truth
+const MODULES = [
+    // Phase 1
+    { id: "00-how-computers-work", dir: "00-how-computers-work", title: "How a Computer Works", phase: 1, phaseName: "How Computers Work & C Basics" },
+    { id: "01-setup-first-program", dir: "01-setup-first-program", title: "Setup & First Program", phase: 1 },
+    { id: "02-types-variables-operators", dir: "02-types-variables-operators", title: "Types, Variables & Operators", phase: 1 },
+    { id: "03-control-flow", dir: "03-control-flow", title: "Control Flow", phase: 1 },
+    { id: "04-functions-program-structure", dir: "04-functions-program-structure", title: "Functions & Program Structure", phase: 1 },
+    { id: "05-recursion-algorithmic-thinking", dir: "05-recursion-algorithmic-thinking", title: "Recursion & Algorithmic Thinking", phase: 1 },
+    // Phase 2
+    { id: "06-pointers-arrays", dir: "06-pointers-arrays", title: "Pointers & Arrays", phase: 2, phaseName: "Pointers & Memory" },
+    { id: "07-dynamic-memory", dir: "07-dynamic-memory", title: "Dynamic Memory", phase: 2 },
+    { id: "08-mastering-memory-management", dir: "08-mastering-memory-management", title: "Mastering Memory Management", phase: 2 },
+    // Phase 3
+    { id: "09-structs-unions-compound-types", dir: "09-structs-unions-compound-types", title: "Structs, Unions & Compound Types", phase: 3, phaseName: "Data Structures & Algorithms" },
+    { id: "10-function-pointers-callbacks", dir: "10-function-pointers-callbacks", title: "Function Pointers & Callbacks", phase: 3 },
+    { id: "11-linked-lists", dir: "11-linked-lists", title: "Linked Lists", phase: 3 },
+    { id: "12-stacks-queues", dir: "12-stacks-queues", title: "Stacks & Queues", phase: 3 },
+    { id: "13-hash-tables", dir: "13-hash-tables", title: "Hash Tables", phase: 3 },
+    { id: "14-sorting-searching", dir: "14-sorting-searching", title: "Sorting & Searching", phase: 3 },
+    { id: "15-trees-heaps", dir: "15-trees-heaps", title: "Trees & Heaps", phase: 3 },
+    // Phase 4
+    { id: "16-file-io-unix-philosophy", dir: "16-file-io-unix-philosophy", title: "File I/O & the Unix Philosophy", phase: 4, phaseName: "Systems Building Blocks" },
+    { id: "17-text-unicode-encoding", dir: "17-text-unicode-encoding", title: "Text, Unicode & Encoding", phase: 4 },
+    { id: "18-date-time", dir: "18-date-time", title: "Date & Time", phase: 4 },
+    { id: "19-preprocessor-build-systems", dir: "19-preprocessor-build-systems", title: "The Preprocessor & Build Systems", phase: 4 },
+    { id: "20-graphs", dir: "20-graphs", title: "Graphs", phase: 4 },
+    { id: "21-process-concurrency", dir: "21-process-concurrency", title: "Process & Concurrency", phase: 4 },
+    // Phase 5
+    { id: "22-building-text-editor", dir: "22-building-text-editor", title: "Building a Text Editor", phase: 5, phaseName: "Building Real Systems" },
+    { id: "23-git-internals", dir: "23-git-internals", title: "Git Internals", phase: 5 },
+    { id: "24-database-key-value-store", dir: "24-database-key-value-store", title: "Database: Key-Value Store", phase: 5 },
+    { id: "25-parsing-sql-engine", dir: "25-parsing-sql-engine", title: "Parsing & the SQL Engine", phase: 5 },
+    { id: "26-network-socket-programming", dir: "26-network-socket-programming", title: "Network & Socket Programming", phase: 5 },
+    { id: "27-encryption-security", dir: "27-encryption-security", title: "Encryption & Security", phase: 5 },
+    { id: "28-graphics-programming", dir: "28-graphics-programming", title: "Graphics Programming", phase: 5 },
+    { id: "28b-image-manipulation-effects", dir: "28b-image-manipulation-effects", title: "Image Manipulation & Effects", phase: 5 },
+    { id: "28c-ray-tracing-3d-graphics", dir: "28c-ray-tracing-3d-graphics", title: "Ray Tracing & 3D Graphics", phase: 5 },
+    // Phase 6
+    { id: "29-machine-learning-in-c", dir: "29-machine-learning-in-c", title: "Machine Learning in C", phase: 6, phaseName: "Advanced Topics & Capstone" },
+    { id: "30-capstone-project", dir: "30-capstone-project", title: "Capstone Project", phase: 6 },
+];
+
+// State
+const state = {
+    currentModule: null,
+    completed: new Set(JSON.parse(localStorage.getItem("ckatas-completed") || "[]")),
+    readmeCache: new Map(),
+    fileCache: new Map(),
+    availableModules: new Set(),
+};
+
+function saveCompleted() {
+    localStorage.setItem("ckatas-completed", JSON.stringify([...state.completed]));
+}
+
+// Check which modules have content
+async function checkAvailableModules() {
+    const checks = MODULES.map(async (mod) => {
+        try {
+            const res = await fetch(`../${mod.dir}/README.md`, { method: "HEAD" });
+            if (res.ok) state.availableModules.add(mod.id);
+        } catch { /* not available */ }
+    });
+    await Promise.all(checks);
+}
+
+// Render sidebar
+function renderSidebar(filter = "") {
+    const container = document.getElementById("sidebarContent");
+    const filterLower = filter.toLowerCase();
+
+    const phases = new Map();
+    for (const mod of MODULES) {
+        if (filter && !mod.title.toLowerCase().includes(filterLower) && !mod.id.includes(filterLower)) {
+            continue;
+        }
+        if (!phases.has(mod.phase)) {
+            phases.set(mod.phase, { name: mod.phaseName || "", modules: [] });
+        }
+        phases.get(mod.phase).modules.push(mod);
+    }
+
+    // Get or fill in phase names
+    const phaseNames = { 1: "How Computers Work & C Basics", 2: "Pointers & Memory", 3: "Data Structures & Algorithms", 4: "Systems Building Blocks", 5: "Building Real Systems", 6: "Advanced Topics & Capstone" };
+
+    let html = "";
+    for (const [phaseNum, data] of phases) {
+        if (data.modules.length === 0) continue;
+        const phaseName = data.name || phaseNames[phaseNum] || `Phase ${phaseNum}`;
+        html += `<div class="phase-group">
+            <div class="phase-header" data-phase="${phaseNum}">
+                <span class="chevron">&#9660;</span>
+                Phase ${phaseNum}: ${phaseName}
+            </div>
+            <div class="phase-modules" data-phase-modules="${phaseNum}">`;
+
+        for (const mod of data.modules) {
+            const isActive = state.currentModule === mod.id;
+            const isCompleted = state.completed.has(mod.id);
+            const isAvailable = state.availableModules.has(mod.id);
+            const statusClass = isCompleted ? "completed" : isAvailable ? "available" : "";
+            html += `<a class="module-link${isActive ? " active" : ""}" data-id="${mod.id}">
+                <span class="status ${statusClass}"></span>
+                <span class="module-number">${mod.id.match(/^[\d]+[a-z]?/)[0]}</span>
+                <span class="module-title">${mod.title}</span>
+            </a>`;
+        }
+        html += `</div></div>`;
+    }
+
+    container.innerHTML = html;
+
+    // Phase collapse handlers
+    container.querySelectorAll(".phase-header").forEach((header) => {
+        const phase = header.dataset.phase;
+        const modules = container.querySelector(`[data-phase-modules="${phase}"]`);
+        // Set natural max-height
+        modules.style.maxHeight = modules.scrollHeight + "px";
+
+        header.addEventListener("click", () => {
+            header.classList.toggle("collapsed");
+            modules.classList.toggle("collapsed");
+            if (!modules.classList.contains("collapsed")) {
+                modules.style.maxHeight = modules.scrollHeight + "px";
+            }
+        });
+    });
+
+    // Module click handlers
+    container.querySelectorAll(".module-link").forEach((link) => {
+        link.addEventListener("click", (e) => {
+            e.preventDefault();
+            navigateTo(link.dataset.id);
+        });
+    });
+}
+
+// Parse basic markdown to HTML
+function parseMarkdown(md) {
+    let html = md;
+
+    // Code blocks (``` ... ```) — with syntax highlighting
+    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+        return highlightCodeBlock(code, lang || "text");
+    });
+
+    // Process line by line for block elements
+    const lines = html.split("\n");
+    let result = [];
+    let inList = false;
+    let listType = "";
+    let listDepth = 0;
+    let inTable = false;
+    let tableRows = [];
+    let inBlockquote = false;
+    let blockquoteLines = [];
+    let inPre = false;
+    let inParagraph = false;
+    let paragraphLines = [];
+
+    function closeParagraph() {
+        if (inParagraph && paragraphLines.length > 0) {
+            result.push(`<p>${paragraphLines.join(" ")}</p>`);
+            paragraphLines = [];
+            inParagraph = false;
+        }
+    }
+
+    function closeList() {
+        if (inList) {
+            for (let i = 0; i < listDepth; i++) {
+                result.push(listType === "ol" ? "</ol>" : "</ul>");
+            }
+            inList = false;
+            listDepth = 0;
+        }
+    }
+
+    function closeTable() {
+        if (inTable && tableRows.length > 0) {
+            let tableHtml = "<table><thead><tr>";
+            const headers = tableRows[0];
+            for (const h of headers) {
+                tableHtml += `<th>${inlineFormat(h.trim())}</th>`;
+            }
+            tableHtml += "</tr></thead><tbody>";
+            for (let i = 2; i < tableRows.length; i++) {
+                tableHtml += "<tr>";
+                for (const cell of tableRows[i]) {
+                    tableHtml += `<td>${inlineFormat(cell.trim())}</td>`;
+                }
+                tableHtml += "</tr>";
+            }
+            tableHtml += "</tbody></table>";
+            result.push(tableHtml);
+            tableRows = [];
+            inTable = false;
+        }
+    }
+
+    function closeBlockquote() {
+        if (inBlockquote && blockquoteLines.length > 0) {
+            result.push(`<blockquote><p>${blockquoteLines.join(" ")}</p></blockquote>`);
+            blockquoteLines = [];
+            inBlockquote = false;
+        }
+    }
+
+    function inlineFormat(text) {
+        // Bold+italic
+        text = text.replace(/\*\*\*(.*?)\*\*\*/g, "<strong><em>$1</em></strong>");
+        // Bold
+        text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+        // Italic
+        text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
+        // Inline code
+        text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+        // Links
+        text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+        return text;
+    }
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+
+        // Track pre blocks — skip all lines inside <pre>...</pre>
+        if (line.includes("<pre>") || line.includes("<pre ")) {
+            closeParagraph();
+            closeList();
+            closeTable();
+            closeBlockquote();
+            inPre = true;
+            result.push(line);
+            // If </pre> is on the same line, close immediately
+            if (line.includes("</pre>")) inPre = false;
+            continue;
+        }
+        if (inPre) {
+            result.push(line);
+            if (line.includes("</pre>")) inPre = false;
+            continue;
+        }
+
+        // Headings
+        const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
+        if (headingMatch) {
+            closeParagraph();
+            closeList();
+            closeTable();
+            closeBlockquote();
+            const level = headingMatch[1].length;
+            result.push(`<h${level}>${inlineFormat(headingMatch[2])}</h${level}>`);
+            continue;
+        }
+
+        // Horizontal rule
+        if (/^---+$/.test(line.trim())) {
+            closeParagraph();
+            closeList();
+            closeTable();
+            closeBlockquote();
+            result.push("<hr>");
+            continue;
+        }
+
+        // Table row
+        if (line.trim().startsWith("|") && line.trim().endsWith("|")) {
+            closeParagraph();
+            closeList();
+            closeBlockquote();
+            inTable = true;
+            const cells = line.trim().slice(1, -1).split("|");
+            tableRows.push(cells);
+            continue;
+        } else if (inTable) {
+            closeTable();
+        }
+
+        // Blockquote
+        if (line.startsWith("> ")) {
+            closeParagraph();
+            closeList();
+            closeTable();
+            inBlockquote = true;
+            blockquoteLines.push(inlineFormat(line.slice(2)));
+            continue;
+        } else if (inBlockquote) {
+            closeBlockquote();
+        }
+
+        // Unordered list
+        const ulMatch = line.match(/^(\s*)[-*]\s+(.*)$/);
+        if (ulMatch) {
+            closeParagraph();
+            closeTable();
+            closeBlockquote();
+            const indent = Math.floor(ulMatch[1].length / 2) + 1;
+            if (!inList) {
+                inList = true;
+                listType = "ul";
+                listDepth = 1;
+                result.push("<ul>");
+            }
+            while (indent > listDepth) {
+                result.push("<ul>");
+                listDepth++;
+            }
+            while (indent < listDepth) {
+                result.push("</ul>");
+                listDepth--;
+            }
+            result.push(`<li>${inlineFormat(ulMatch[2])}</li>`);
+            continue;
+        }
+
+        // Ordered list
+        const olMatch = line.match(/^(\s*)\d+\.\s+(.*)$/);
+        if (olMatch) {
+            closeParagraph();
+            closeTable();
+            closeBlockquote();
+            if (!inList) {
+                inList = true;
+                listType = "ol";
+                listDepth = 1;
+                result.push("<ol>");
+            }
+            result.push(`<li>${inlineFormat(olMatch[2])}</li>`);
+            continue;
+        }
+
+        // Close list if we hit a non-list line
+        if (inList && !ulMatch && !olMatch) {
+            closeList();
+        }
+
+        // Empty line
+        if (line.trim() === "") {
+            closeParagraph();
+            continue;
+        }
+
+        // Regular paragraph text
+        inParagraph = true;
+        paragraphLines.push(inlineFormat(line));
+    }
+
+    closeParagraph();
+    closeList();
+    closeTable();
+    closeBlockquote();
+
+    return result.join("\n");
+}
+
+// Fetch and display a module
+async function loadModule(moduleId) {
+    const mod = MODULES.find((m) => m.id === moduleId);
+    if (!mod) {
+        showError(`Module ${moduleId} not found.`);
+        return;
+    }
+
+    const content = document.getElementById("mainContent");
+
+    if (!state.availableModules.has(moduleId)) {
+        content.innerHTML = `
+            <div class="markdown-body">
+                <h1>${mod.id} — ${mod.title}</h1>
+                <div class="error-msg">
+                    This module hasn't been built yet. It's coming soon!
+                </div>
+                ${renderNav(moduleId)}
+            </div>`;
+        return;
+    }
+
+    content.innerHTML = `<div class="loading">Loading lesson...</div>`;
+
+    try {
+        let readme;
+        if (state.readmeCache.has(moduleId)) {
+            readme = state.readmeCache.get(moduleId);
+        } else {
+            const res = await fetch(`../${mod.dir}/README.md`);
+            if (!res.ok) throw new Error(`Failed to load: ${res.status}`);
+            readme = await res.text();
+            state.readmeCache.set(moduleId, readme);
+        }
+
+        const htmlContent = parseMarkdown(readme);
+
+        // Try to load exercise and solution files
+        let filesHtml = "";
+        const exerciseFiles = await fetchFileList(mod.dir, "exercises");
+        const solutionFiles = await fetchFileList(mod.dir, "solutions");
+
+        if (exerciseFiles.length > 0) {
+            filesHtml += await renderFileTabs("Exercises", exerciseFiles, mod.dir, "exercises");
+        }
+        if (solutionFiles.length > 0) {
+            filesHtml += await renderFileTabs("Solutions", solutionFiles, mod.dir, "solutions");
+        }
+
+        // Completion toggle
+        const isCompleted = state.completed.has(moduleId);
+        const toggleHtml = `
+            <div style="margin-top: 32px; display: flex; align-items: center; gap: 12px;">
+                <button id="completeToggle" style="
+                    padding: 8px 20px;
+                    background: ${isCompleted ? "var(--green)" : "var(--bg-tertiary)"};
+                    border: 1px solid ${isCompleted ? "var(--green)" : "var(--border)"};
+                    border-radius: 6px;
+                    color: var(--text);
+                    cursor: pointer;
+                    font-size: 14px;
+                    transition: all 0.15s ease;
+                ">${isCompleted ? "&#10003; Completed" : "Mark as Complete"}</button>
+            </div>`;
+
+        content.innerHTML = `
+            <div class="markdown-body">
+                ${htmlContent}
+            </div>
+            ${filesHtml}
+            ${toggleHtml}
+            ${renderNav(moduleId)}`;
+
+        // Completion toggle handler
+        document.getElementById("completeToggle")?.addEventListener("click", () => {
+            if (state.completed.has(moduleId)) {
+                state.completed.delete(moduleId);
+            } else {
+                state.completed.add(moduleId);
+            }
+            saveCompleted();
+            updateProgress();
+            renderSidebar(document.getElementById("searchInput").value);
+            loadModule(moduleId); // re-render
+        });
+
+        // Initialize CodeMirror editors for file viewers
+        await initFileEditors();
+
+        // File tab handlers
+        content.querySelectorAll(".file-tab").forEach((tab) => {
+            tab.addEventListener("click", () => {
+                const group = tab.closest(".file-viewer-group");
+                group.querySelectorAll(".file-tab").forEach((t) => t.classList.remove("active"));
+                group.querySelectorAll(".file-pane").forEach((p) => (p.style.display = "none"));
+                tab.classList.add("active");
+                const pane = group.querySelector(`.file-pane[data-file="${tab.dataset.file}"]`);
+                if (pane) pane.style.display = "block";
+                // Refresh CodeMirror when tab becomes visible
+                const cm = pane.querySelector(".cm-editor");
+                if (cm && cm.cmView) cm.cmView.view.requestMeasure();
+            });
+        });
+
+    } catch (err) {
+        content.innerHTML = `<div class="error-msg">Failed to load module: ${err.message}</div>`;
+    }
+}
+
+async function fetchFileList(dir, subdir) {
+    // Try known file names since we can't list directories via fetch
+    const commonNames = [
+        // Module 00
+        "base_converter.c", "binary_printer.c",
+        // Module 01
+        "hello.c", "about_me.c", "explore_compilation.sh",
+        // Module 02
+        "type_explorer.c", "bit_operations.c", "float_mysteries.c",
+        // Module 03
+        "fizzbuzz.c", "number_guess.c", "patterns.c", "prime_checker.c",
+        // Module 04
+        "calculator.c", "temperature.c", "math_lib.h", "math_lib.c", "math_lib_test.c",
+        // Module 05
+        "factorial.c", "fibonacci.c", "power.c", "hanoi.c", "recursive_strings.c",
+        // Module 06
+        "pointers.c", "strings.c", "arrays.c", "string_tokenizer.c",
+        // Module 07
+        "string_builder.c", "dynamic_array.c", "leak_detective.c",
+        // Module 08
+        "arena.c", "pool.c", "mini_malloc.c", "memory_profiler.c",
+        // Module 09
+        "structs.c", "tagged_union.c", "point.c",
+        // Module 10
+        "callbacks.c", "generic_sort.c", "command_dispatch.c",
+        // Module 11
+        "linked_list.c", "lru_cache.c",
+        // Module 12
+        "stack.c", "queue.c", "expression_eval.c",
+        // Module 13
+        "hash_table.c", "spell_checker.c", "word_freq.c",
+        // Module 14
+        "sorting.c", "binary_search.c",
+        // Module 15
+        "bst.c", "avl.c", "heap.c", "trie.c",
+    ];
+
+    const found = [];
+    const checks = commonNames.map(async (name) => {
+        try {
+            const res = await fetch(`../${dir}/${subdir}/${name}`, { method: "HEAD" });
+            if (res.ok) found.push(name);
+        } catch { /* ignore */ }
+    });
+    await Promise.all(checks);
+    return found.sort();
+}
+
+async function renderFileTabs(label, files, dir, subdir) {
+    if (files.length === 0) return "";
+
+    // Fetch all file contents in parallel
+    const contents = await Promise.all(
+        files.map(async (name) => {
+            const key = `${dir}/${subdir}/${name}`;
+            if (state.fileCache.has(key)) return { name, content: state.fileCache.get(key) };
+            try {
+                const res = await fetch(`../${dir}/${subdir}/${name}`);
+                const text = await res.text();
+                state.fileCache.set(key, text);
+                return { name, content: text };
+            } catch {
+                return { name, content: "// Failed to load file" };
+            }
+        })
+    );
+
+    // Store contents for syntax-highlighted rendering
+    state._pendingEditors = state._pendingEditors || [];
+
+    let tabs = `<h3>${label}</h3><div class="file-viewer-group"><div class="file-tabs">`;
+    for (let i = 0; i < contents.length; i++) {
+        tabs += `<button class="file-tab${i === 0 ? " active" : ""}" data-file="${contents[i].name}">${contents[i].name}</button>`;
+    }
+    tabs += `</div>`;
+
+    for (let i = 0; i < contents.length; i++) {
+        const editorId = `editor-${subdir}-${contents[i].name}`.replace(/[^a-zA-Z0-9-]/g, "_");
+        tabs += `<div class="file-content file-pane" data-file="${contents[i].name}" id="${editorId}" style="display: ${i === 0 ? "block" : "none"}">
+            <pre><code>Loading...</code></pre>
+        </div>`;
+        state._pendingEditors.push({ id: editorId, code: contents[i].content, name: contents[i].name });
+    }
+    tabs += `</div>`;
+    return tabs;
+}
+
+async function initFileEditors() {
+    await cmLoading;
+    const pending = state._pendingEditors || [];
+    state._pendingEditors = [];
+
+    for (const { id, code, name } of pending) {
+        const container = document.getElementById(id);
+        if (!container) continue;
+
+        const ext = name.split(".").pop();
+        if (cmReady) {
+            createEditor(container, code, ext);
+        } else {
+            // Fallback: custom syntax highlighter
+            const isC = ["c", "h"].includes(ext);
+            const escaped = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            const highlighted = isC ? highlightC(code) : escaped;
+            const lines = highlighted.split("\n");
+            if (lines[lines.length - 1] === "") lines.pop();
+            const numbered = lines.map(l => `<span class="code-line">${l}</span>`).join("\n");
+            container.innerHTML = `<pre><code class="line-numbers">${numbered}</code></pre>`;
+        }
+    }
+}
+
+function renderNav(moduleId) {
+    const idx = MODULES.findIndex((m) => m.id === moduleId);
+    const prev = idx > 0 ? MODULES[idx - 1] : null;
+    const next = idx < MODULES.length - 1 ? MODULES[idx + 1] : null;
+
+    return `<div class="lesson-nav">
+        <a class="lesson-nav-btn${prev ? "" : " disabled"}" ${prev ? `data-nav="${prev.id}"` : ""}>
+            <span>&#8592;</span>
+            <div>
+                <div class="nav-label">Previous</div>
+                <div class="nav-title">${prev ? `${prev.id} — ${prev.title}` : ""}</div>
+            </div>
+        </a>
+        <a class="lesson-nav-btn${next ? "" : " disabled"}" ${next ? `data-nav="${next.id}"` : ""}>
+            <div style="text-align: right">
+                <div class="nav-label">Next</div>
+                <div class="nav-title">${next ? `${next.id} — ${next.title}` : ""}</div>
+            </div>
+            <span>&#8594;</span>
+        </a>
+    </div>`;
+}
+
+function showWelcome() {
+    const totalModules = MODULES.length;
+    const completedCount = state.completed.size;
+    const availableCount = state.availableModules.size;
+
+    document.getElementById("mainContent").innerHTML = `
+        <div class="welcome">
+            <h2>C Systems Programming</h2>
+            <p>From first principles. 30 modules. Build real systems. No shortcuts.</p>
+            <button class="start-btn" id="startBtn">Start Learning</button>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">${totalModules}</div>
+                    <div class="stat-label">Total Modules</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${availableCount}</div>
+                    <div class="stat-label">Available</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${completedCount}</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">6</div>
+                    <div class="stat-label">Phases</div>
+                </div>
+            </div>
+        </div>`;
+
+    document.getElementById("startBtn").addEventListener("click", () => {
+        navigateTo("00-how-computers-work");
+    });
+}
+
+function showError(msg) {
+    document.getElementById("mainContent").innerHTML = `<div class="error-msg">${msg}</div>`;
+}
+
+function updateProgress() {
+    const total = MODULES.length;
+    const done = state.completed.size;
+    const pct = total > 0 ? (done / total) * 100 : 0;
+    document.getElementById("progressFill").style.width = `${pct}%`;
+    document.getElementById("progressText").textContent = `${done} / ${total}`;
+}
+
+function navigateTo(moduleId) {
+    if (moduleId === null) {
+        window.location.hash = "";
+        state.currentModule = null;
+        showWelcome();
+    } else {
+        window.location.hash = moduleId;
+        state.currentModule = moduleId;
+        loadModule(moduleId);
+    }
+    renderSidebar(document.getElementById("searchInput").value);
+
+    // Close mobile sidebar
+    document.getElementById("sidebar").classList.remove("open");
+    document.getElementById("sidebarOverlay").classList.remove("visible");
+}
+
+// Event delegation for nav buttons
+document.getElementById("mainContent").addEventListener("click", (e) => {
+    const navBtn = e.target.closest("[data-nav]");
+    if (navBtn) {
+        e.preventDefault();
+        navigateTo(navBtn.dataset.nav);
+    }
+});
+
+// Search
+document.getElementById("searchInput").addEventListener("input", (e) => {
+    renderSidebar(e.target.value);
+});
+
+// Mobile menu
+document.getElementById("menuToggle").addEventListener("click", () => {
+    document.getElementById("sidebar").classList.toggle("open");
+    document.getElementById("sidebarOverlay").classList.toggle("visible");
+});
+document.getElementById("sidebarOverlay").addEventListener("click", () => {
+    document.getElementById("sidebar").classList.remove("open");
+    document.getElementById("sidebarOverlay").classList.remove("visible");
+});
+
+// Hash navigation
+window.addEventListener("hashchange", () => {
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+        state.currentModule = hash;
+        loadModule(hash);
+        renderSidebar(document.getElementById("searchInput").value);
+    } else {
+        state.currentModule = null;
+        showWelcome();
+        renderSidebar("");
+    }
+});
+
+// Init
+async function init() {
+    await checkAvailableModules();
+    updateProgress();
+    renderSidebar();
+
+    const hash = window.location.hash.slice(1);
+    if (hash && MODULES.find((m) => m.id === hash)) {
+        state.currentModule = hash;
+        loadModule(hash);
+    } else {
+        showWelcome();
+    }
+}
+
+init();
+
+</script>
+</body>
+</html>
