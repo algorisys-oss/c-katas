@@ -594,3 +594,27 @@ Real-world uses:
 
 2. **`heap.c`** — Implement a min-heap with insert, extract-min, peek, and
    heap sort. ~14 tests.
+
+---
+
+## Debug Challenge
+
+| File | Description | Bugs |
+|------|-------------|------|
+| `debug_bst.c` | Find and fix 5 binary search tree bugs | 5 |
+
+These exercises contain **intentionally broken code**. Your job is to find and
+fix each bug. Each function has a comment explaining what it SHOULD do and a
+HINT about the bug class. Run the program — failing tests tell you which
+functions are still broken.
+
+```bash
+make debug    # compile the buggy version
+./exercises/debug_bst   # see which tests fail
+# ... fix bugs ...
+# recompile and rerun until all tests pass
+```
+
+---
+
+[← Previous: Module 14: Sorting & Searching](../14-sorting-searching/README.md) | [Next: Module 16: File I/O & the Unix Philosophy →](../16-file-io-unix-philosophy/README.md)

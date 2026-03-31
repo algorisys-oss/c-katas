@@ -403,6 +403,31 @@ pointer dereference is potentially a cache miss.
 This is why you should measure performance, not just count Big-O. Algorithms
 with better theoretical complexity can be slower in practice due to cache effects.
 
+### The Performance Reality
+
+In Big-O terms, linked lists and arrays both have O(n) traversal. But in
+practice, traversing a linked list can be 10-100x slower than an array of
+the same size. Why?
+
+Each linked list node was allocated separately with malloc(). They can be
+scattered anywhere in memory:
+
+```
+Array:     [0][1][2][3][4][5][6][7]   ← all in one cache line!
+
+Linked list nodes in memory:
+addr 0x1000: [data|next] ──→ addr 0x5420: [data|next] ──→ addr 0x2108: ...
+             ↑ cache line 1  ↑ different cache line!       ↑ yet another!
+```
+
+Every node->next might be a cache MISS — a trip to RAM that takes 100ns
+instead of 1ns. Multiply by thousands of nodes and the difference is huge.
+
+This doesn't mean linked lists are bad — they're great for O(1) insert/delete
+at known positions. But for iteration-heavy workloads, arrays win by a
+landslide. This is why performance-critical code often uses arrays even when
+the Big-O suggests a linked list would be "better."
+
 ---
 
 ## Common Pitfalls
@@ -430,3 +455,27 @@ with better theoretical complexity can be slower in practice due to cache effect
 |---|------|-------------|
 | 1 | `exercises/linked_list.c` | Singly linked list library — 18 tests |
 | 2 | `exercises/lru_cache.c` | LRU cache with doubly linked list — 10 tests |
+
+---
+
+## Debug Challenge
+
+| File | Description | Bugs |
+|------|-------------|------|
+| `debug_list.c` | Find and fix 5 common linked list bugs | 5 |
+
+These exercises contain **intentionally broken code**. Your job is to find and
+fix each bug. Each function has a comment explaining what it SHOULD do and a
+HINT about the bug class. Run the program — failing tests tell you which
+functions are still broken.
+
+```bash
+make debug    # compile the buggy version
+./exercises/debug_list   # see which tests fail
+# ... fix bugs ...
+# recompile and rerun until all tests pass
+```
+
+---
+
+[← Previous: Module 10 — Function Pointers & Callbacks](../10-function-pointers-callbacks/README.md) | [Next: Module 12: Stacks & Queues →](../12-stacks-queues/README.md)

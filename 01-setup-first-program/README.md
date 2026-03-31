@@ -252,6 +252,24 @@ wires your call to it.
                                                         alone)
 ```
 
+### Under the Hood: What Happens When You Run ./hello
+
+When you type `./hello` and press Enter, an incredible chain of events occurs:
+
+1. **Shell reads your command** — bash parses "./hello" as "run this file"
+2. **fork()** — the shell creates a copy of itself (a new process)
+3. **exec()** — the new process replaces itself with your program
+4. **Loader** — the OS reads the ELF binary, maps code and data into memory
+5. **Dynamic linker** — resolves shared library references (libc, etc.)
+6. **_start** — the C runtime startup code runs BEFORE main()
+7. **main()** — YOUR code finally executes
+8. **printf** — writes to a buffer, which eventually calls write(1, ...)
+9. **write()** — system call transfers bytes to the terminal driver
+10. **Terminal** — displays the characters on your screen
+11. **exit()** — your process terminates, OS reclaims all memory
+
+All of this happens in under a millisecond.
+
 ---
 
 ## 5. printf — Formatted Printing
@@ -434,3 +452,7 @@ When you are stuck, reference solutions are in `solutions/`.
 
 Build all exercises with `make` from this directory. Run `make clean` to
 start fresh.
+
+---
+
+[← Previous: Module 00 — How a Computer Works](../00-how-computers-work/README.md) | [Next: Module 02 — Types, Variables & Operators →](../02-types-variables-operators/README.md)

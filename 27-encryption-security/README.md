@@ -130,6 +130,21 @@ A hash function takes input of any size and produces a fixed-size output
 
 Encryption relies heavily on modular arithmetic — "clock arithmetic."
 
+**Why does modular arithmetic matter for encryption?** Modular arithmetic
+keeps numbers bounded — no matter how large the exponent, the result stays
+within a fixed range (0 to n-1). This is essential for encryption because:
+
+1. **It makes operations reversible** — you can "undo" encryption with the
+   right key, because modular arithmetic preserves structure
+2. **It creates one-way functions** — easy to compute forward (raise to a
+   power mod n), but extremely hard to reverse (find the original number)
+3. **It keeps numbers manageable** — instead of computing 65^2753 (a number
+   with thousands of digits), you work with numbers smaller than n at every
+   step
+
+Without modular arithmetic, encryption would produce impossibly large numbers
+and there would be no efficient way to decrypt.
+
 ```
     a mod n = remainder when a is divided by n
 
@@ -195,6 +210,20 @@ RSA (Rivest–Shamir–Adleman, 1977) is the most famous public-key cryptosystem
     │  5. Compute d:             d = e⁻¹ mod φ = 2753        │
     │                            (17 × 2753 = 46801          │
     │                             46801 mod 3120 = 1  ✓)     │
+    │                                                         │
+    │  Step 4 explained:                                      │
+    │    "Coprime" means two numbers share no common factors  │
+    │    other than 1. Example: 17 and 60 are coprime (no     │
+    │    shared factors), but 15 and 60 are NOT coprime       │
+    │    (they share 3 and 5). We choose e coprime to φ so    │
+    │    the encryption function covers all possible values.  │
+    │                                                         │
+    │  Step 5 explained:                                      │
+    │    The "modular inverse" d is the number where           │
+    │    (e × d) % φ = 1. Example: if e=17, φ=60, then       │
+    │    d=53 because 17×53 = 901, and 901 % 60 = 1.         │
+    │    You find d using the Extended Euclidean Algorithm     │
+    │    (a systematic method — implemented in the exercises).│
     │                                                         │
     │  Public key:   (e=17,  n=3233)  ← share with everyone  │
     │  Private key:  (d=2753, n=3233) ← keep secret!         │
@@ -378,3 +407,7 @@ When you visit `https://example.com`, this happens:
 - **Real systems** combine asymmetric + symmetric encryption (TLS)
 - **Never roll your own crypto** in production — use battle-tested libraries
   (OpenSSL, libsodium). But understanding the fundamentals is essential!
+
+---
+
+[← Previous: Module 26: Network & Socket Programming](../26-network-socket-programming/README.md) | [Next: Module 28: Graphics Programming →](../28-graphics-programming/README.md)

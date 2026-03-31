@@ -234,18 +234,64 @@ Computers do the same thing, but in binary. This is the **IEEE 754** standard.
 Some decimals cannot be exactly represented in binary, just like 1/3 cannot
 be exactly represented in decimal (0.33333... forever).
 
+Let's see *exactly* why by converting 0.1 to binary step by step.
+
+#### Step-by-Step: Converting 0.1 (Decimal) to Binary
+
+To convert a decimal fraction to binary, you **repeatedly multiply by 2**
+and take the integer part:
+
 ```
-  0.1 in binary = 0.0001100110011001100110011... (repeats forever)
-  0.2 in binary = 0.0011001100110011001100110... (repeats forever)
+  Converting 0.1 to binary:
 
-  The computer must round these to fit in 23 bits of mantissa.
-  When you add the rounded versions:
+  0.1 × 2 = 0.2  → integer part = 0
+  0.2 × 2 = 0.4  → integer part = 0
+  0.4 × 2 = 0.8  → integer part = 0
+  0.8 × 2 = 1.6  → integer part = 1    ← first '1' bit!
+  0.6 × 2 = 1.2  → integer part = 1
+  0.2 × 2 = 0.4  → integer part = 0    ← we're back to 0.2!
+  0.4 × 2 = 0.8  → integer part = 0       the pattern repeats
+  0.8 × 2 = 1.6  → integer part = 1       forever: 0011 0011 0011...
+  ...
 
-    0.1 (rounded) + 0.2 (rounded) = 0.30000000000000004...
+  Result: 0.1 (decimal) = 0.0 0011 0011 0011 0011... (binary, repeating)
+                                ────  ────  ────
+                                repeating block: 0011
+```
+
+The same thing happens with 0.2:
+
+```
+  0.2 (decimal) = 0.0011 0011 0011 0011... (binary, repeating)
+```
+
+**The key insight**: just like 1/3 = 0.333... can never be written exactly
+in decimal (you'd need infinite digits), 1/10 = 0.1 can never be written
+exactly in binary. The pattern `0011` repeats forever, but the computer only
+has 23 bits (float) or 52 bits (double) of mantissa to store it. It must
+**truncate** — chop off the infinite tail.
+
+```
+  What the computer actually stores:
+
+  0.1 ≈ 0.0001100110011001100110011  (23 mantissa bits, then STOP)
+                                  ↑
+                              truncated here — lost precision!
+
+  0.2 ≈ 0.0011001100110011001100110  (23 mantissa bits, then STOP)
+
+  When you add these truncated values:
+
+    0.1 (truncated) + 0.2 (truncated) = 0.30000000000000004...
 
   NOT exactly 0.3. This is NOT a bug in C. It is a fundamental
-  limitation of binary floating point.
+  limitation of representing base-10 fractions in base-2.
 ```
+
+**Why does this matter?** Because a tiny rounding error in each number
+compounds when you add them. The stored 0.1 is slightly more than 0.1,
+and the stored 0.2 is slightly more than 0.2, so their sum overshoots 0.3
+by a tiny amount — about 0.00000000000000004.
 
 **Rule of thumb:**
 - Money = use integers in cents, not floats in dollars
@@ -478,3 +524,7 @@ The exercises are in the `exercises/` directory:
 
 Build all exercises with `make` from this directory. Solutions are in
 `solutions/`. Build them with `make solutions`.
+
+---
+
+[← Previous: Module 01 — Setup & First Program](../01-setup-first-program/README.md) | [Next: Module 03 — Control Flow →](../03-control-flow/README.md)

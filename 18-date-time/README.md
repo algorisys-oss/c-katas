@@ -338,3 +338,7 @@ arithmetic only. You'll build:
 
 16 tests covering edge cases: century years, leap day, known weekdays,
 cross-year spans, and date formatting.
+
+---
+
+[← Previous: Module 17 — Text, Unicode & Encoding](../17-text-unicode-encoding/README.md) | [Next: Module 19 — The Preprocessor & Build Systems →](../19-preprocessor-build-systems/README.md)

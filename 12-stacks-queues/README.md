@@ -174,10 +174,39 @@ you loop back to the beginning. This way, no space is ever wasted.
     The buffer has WRAPPED AROUND!
 ```
 
-The magic formula: use modular arithmetic for wrapping.
+The magic formula: use **modular arithmetic** for wrapping.
+
+But wait — what *is* modular arithmetic? You already know it from daily life:
+clocks. After 12 o'clock comes 1, not 13. The number "wraps around" when it
+reaches the maximum. The **modulo operator** `%` gives you the remainder after
+division, which is exactly this wrapping behavior:
+
+```
+    How % (modulo) works:
+
+    0 % 6 = 0     (0 ÷ 6 = 0 remainder 0)
+    1 % 6 = 1     (1 ÷ 6 = 0 remainder 1)
+    2 % 6 = 2
+    3 % 6 = 3
+    4 % 6 = 4
+    5 % 6 = 5
+    6 % 6 = 0  ← wrapped back to 0!
+    7 % 6 = 1  ← continues from 0
+    8 % 6 = 2
+
+    Pattern: the result is always 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, ...
+    It NEVER reaches 6 — it always stays within [0, capacity-1].
+    This is exactly what we need for array indices!
+```
+
+So the formula for the next index in a circular buffer is:
 ```
     next index = (current index + 1) % capacity
 ```
+
+Why this works: when `current index` is 5 and capacity is 6, `(5 + 1) % 6 = 0`
+— we wrap back to the start of the array. For any other index, we just get
+the next slot as usual.
 
 Visual of the circular nature:
 ```
@@ -303,3 +332,7 @@ Use a value stack:
 | 3 | `expression_eval.c`  | Infix → postfix converter + postfix evaluator    |
 
 Build with `make exercises` and test solutions with `make test`.
+
+---
+
+[← Previous: Module 11 — Linked Lists](../11-linked-lists/README.md) | [Next: Module 13 — Hash Tables →](../13-hash-tables/README.md)

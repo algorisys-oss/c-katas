@@ -94,6 +94,14 @@ Non-linear brightness adjustment used by monitors:
    result     = corrected * 255
 ```
 
+**Why is gamma correction needed?** Monitors don't display brightness
+linearly. If you send a pixel value of 128 (half of 255), the monitor
+doesn't show half-brightness — it shows about 22% brightness. This is
+because CRT monitors (and LCDs that emulate them) have a power-law
+response curve. Gamma correction compensates: by applying
+`pow(value, gamma)`, you pre-distort the values so they look correct on
+screen. A gamma of 2.2 is standard for most displays.
+
 - Gamma < 1 brightens dark areas (lifts shadows)
 - Gamma > 1 darkens (crushes shadows)
 
@@ -109,6 +117,14 @@ The standard luminance formula weights accordingly:
 ```
    gray = 0.299 * R + 0.587 * G + 0.114 * B
 ```
+
+**Why these specific weights?** These weights come from how the human eye
+perceives color. Your eyes are MOST sensitive to green light (0.587),
+moderately sensitive to red (0.299), and LEAST sensitive to blue (0.114).
+If you used equal weights (0.333 each), bright blue and bright green would
+look equally bright in grayscale — but in reality, green appears much
+brighter to human eyes. These specific values come from the ITU-R BT.601
+standard, based on decades of color perception research.
 
 Set R = G = B = gray for a grayscale pixel.
 
@@ -219,6 +235,17 @@ complete 3x3 neighborhood. Set them to black (0,0,0) in the output.
 ---
 
 ## Common Kernels
+
+### How to Choose the Divisor
+
+The divisor for a convolution kernel should equal the **sum of all kernel
+values**. This keeps the overall brightness unchanged. For box blur (all
+1s), the sum is 9, so divide by 9. For a sharpen kernel (values like -1,
+-1, 5, -1, -1), the sum is 1, so divide by 1 (no change needed). If the
+sum is 0 (like edge detection kernels), the output represents *change*
+rather than brightness — no division needed, but you may need to add 128
+to shift the range so that "no change" appears as medium gray instead of
+black.
 
 ### Box Blur (Average)
 
@@ -402,3 +429,7 @@ make test
 ```
 
 All 14 tests should pass.
+
+---
+
+[← Previous: Module 28: Graphics Programming](../28-graphics-programming/README.md) | [Next: Module 28c — Ray Tracing & 3D Graphics →](../28c-ray-tracing-3d-graphics/README.md)

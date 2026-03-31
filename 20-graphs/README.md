@@ -398,6 +398,14 @@ non-negative — you can never find a shortcut through a more-distant vertex.
 With a simple array to find the minimum: **O(V^2)**
 With a priority queue (min-heap): **O((V + E) log V)**
 
+> **What is a priority queue / min-heap?** A priority queue is like a hospital
+> waiting room --- the most urgent patient gets seen first, regardless of who
+> arrived first. A **min-heap** is a tree-based data structure that efficiently
+> keeps track of the smallest element (you learned about heaps in Module 15).
+> Dijkstra uses a min-heap to always process the closest unvisited vertex next:
+> instead of scanning all vertices to find the smallest distance (O(V)), a
+> min-heap gives you the minimum in O(log V).
+
 For sparse graphs, the heap version is much faster. We'll implement the simple
 O(V^2) version here.
 
@@ -413,20 +421,32 @@ graph algorithms to solve them:
 | GPS navigation         | Intersections     | Roads (weighted)         | Dijkstra     |
 | Social network         | People            | Friendships              | BFS          |
 | Web crawler            | Web pages         | Links (directed)         | BFS/DFS      |
-| Course prerequisites   | Courses           | Dependencies (directed)  | Topological  |
+| Course prerequisites   | Courses           | Dependencies (directed)  | Topological sort |
 | Network routing        | Routers           | Connections (weighted)   | Dijkstra     |
 | Maze solving           | Cells             | Passages                 | DFS/BFS      |
+
+> **What is topological sort?** It is an ordering of vertices in a directed
+> acyclic graph (DAG) such that for every edge A→B, A comes before B in the
+> ordering. Think of it like a course schedule: if "Calculus 1" is a
+> prerequisite for "Calculus 2", topological sort guarantees Calculus 1 appears
+> first. You can compute it with a modified DFS.
 
 ---
 
 ## Exercises
 
-| File       | Concepts                               | Tests |
-|------------|----------------------------------------|-------|
-| `graph.c`  | Adjacency list, BFS, DFS, shortest path | 15    |
+| File            | Concepts                                | Tests |
+|-----------------|------------------------------------------|-------|
+| `graph.c`       | Adjacency list, BFS, DFS, shortest path  | 15    |
+| `maze.c`        | BFS maze solver, path reconstruction     | 8     |
+| `topo_sort.c`   | Topological sort (Kahn's), cycle detect  | 10    |
 
 Build and test:
 ```bash
 make exercises    # build student code (won't pass until you fill in TODOs)
 make test         # build and run solutions to verify
 ```
+
+---
+
+[← Previous: Module 19 — The Preprocessor & Build Systems](../19-preprocessor-build-systems/README.md) | [Next: Module 21: Processes & Concurrency →](../21-process-concurrency/README.md)

@@ -32,10 +32,19 @@ test: solutions
 	@echo ""
 	@echo "All solution tests complete."
 
+# --- Debug exercise targets ---
+
+debug: exercises/debug_network.c
+	$(CC) $(CFLAGS) exercises/debug_network.c -o exercises/debug_network
+
+debug-solution: solutions/debug_network.c
+	$(CC) $(CFLAGS) solutions/debug_network.c -o solutions/debug_network
+
 # --- Clean up ---
 
 clean:
 	rm -f http_parser protocol
 	rm -f sol-http_parser sol-protocol
+	rm -f exercises/debug_network solutions/debug_network
 
-.PHONY: exercises solutions test clean
+.PHONY: exercises solutions test clean debug debug-solution

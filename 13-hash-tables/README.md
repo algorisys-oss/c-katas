@@ -192,6 +192,16 @@ is tricky (can't just empty a slot — it breaks the probe chain).
 We'll implement **separate chaining** in our exercises because it's simpler
 and teaches linked list manipulation at the same time.
 
+### Performance: Open Addressing vs. Chaining in Practice
+
+In theory, both have O(1) average case. In practice, open addressing is
+often faster because probes stay within a contiguous array — the CPU cache
+prefetches nearby slots for free. Chaining follows pointers to scattered
+heap nodes, causing cache misses.
+
+This is why many high-performance hash tables (Google's dense_hash_map,
+Rust's HashMap, Python's dict since 3.6) use open addressing variants.
+
 ---
 
 ## Load Factor and Rehashing
@@ -318,6 +328,26 @@ Tokenize text into words and count occurrences of each word.
 
 ---
 
+## Debug Challenge
+
+| File | Description | Bugs |
+|------|-------------|------|
+| `debug_hashtable.c` | Find and fix 5 hash table bugs (open addressing) | 5 |
+
+These exercises contain **intentionally broken code**. Your job is to find and
+fix each bug. Each function has a comment explaining what it SHOULD do and a
+HINT about the bug class. Run the program — failing tests tell you which
+functions are still broken.
+
+```bash
+make debug    # compile the buggy version
+./exercises/debug_hashtable   # see which tests fail
+# ... fix bugs ...
+# recompile and rerun until all tests pass
+```
+
+---
+
 ## Key Takeaways
 
 1. **Hash tables map keys to array indices** using a hash function
@@ -326,3 +356,23 @@ Tokenize text into words and count occurrences of each word.
 4. **Amortized O(1)** for insert, lookup, and delete — the best average case
 5. **Space-time tradeoff** — more memory means fewer collisions means faster lookups
 6. Hash tables are the backbone of dictionaries, caches, symbol tables, and databases
+
+### Reading Real Code: Redis dict.c
+
+Redis — the world's most popular in-memory database — has a beautifully
+written hash table implementation in `dict.c` (~800 lines). Key things
+to look for:
+
+- **Incremental rehashing**: Redis doesn't resize all at once (that would
+  freeze the server). It moves a few entries per operation, spreading the
+  cost over time. Look for `dictRehash()` and `rehashidx`.
+- **Two hash tables**: During rehashing, Redis keeps both the old and new
+  tables, gradually migrating entries. Look for `ht[0]` and `ht[1]`.
+- **Hash function**: Redis uses SipHash for security (resistant to
+  hash-flooding attacks).
+
+Source: https://github.com/redis/redis/blob/unstable/src/dict.c
+
+---
+
+[← Previous: Module 12: Stacks & Queues](../12-stacks-queues/README.md) | [Next: Module 14: Sorting & Searching →](../14-sorting-searching/README.md)

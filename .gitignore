@@ -66,6 +66,9 @@ obj/
 *.png
 !assets/**/*.png
 
+# Test binaries in module directories
+**/test_*
+
 # Core dumps
 core
 core.*

@@ -188,10 +188,41 @@ void enable_raw_mode(void)
 {
     tcgetattr(STDIN_FILENO, &orig);       /* save original settings */
     struct termios raw = orig;
-    raw.c_lflag &= ~(ECHO | ICANON);     /* disable echo + canonical mode */
-    raw.c_lflag &= ~(ISIG);              /* disable Ctrl-C / Ctrl-Z signals */
-    raw.c_iflag &= ~(IXON | ICRNL);      /* disable Ctrl-S/Q, fix Ctrl-M */
-    raw.c_oflag &= ~(OPOST);             /* disable output processing */
+    /*
+     * Each flag is a single bit in an integer. The expression &= ~(FLAG)
+     * means "turn off this bit" — it ANDs with the bitwise inverse of the
+     * flag, clearing that bit while leaving all others unchanged.
+     *
+     * ICANON — canonical mode: the terminal collects a whole line before
+     *          sending it to your program (waits for Enter). Turning it
+     *          off gives us each keypress immediately.
+     * ECHO   — the terminal automatically echoes what you type back to
+     *          the screen. We turn it off because the editor will draw
+     *          the screen itself.
+     */
+    raw.c_lflag &= ~(ECHO | ICANON);
+    /*
+     * ISIG — when on, Ctrl+C sends SIGINT and Ctrl+Z sends SIGTSTP.
+     *        We turn it off so we can handle those key combos ourselves.
+     */
+    raw.c_lflag &= ~(ISIG);
+    /*
+     * IXON  — software flow control. When on, Ctrl+S pauses output and
+     *         Ctrl+Q resumes it (a leftover from the 1970s). We turn it
+     *         off so we can use Ctrl+S for "save" and Ctrl+Q for "quit".
+     * ICRNL — translates carriage return (CR, '\r', byte 13) into newline
+     *         (NL, '\n', byte 10). We turn it off to get raw input — we
+     *         want to know exactly which byte the terminal sent.
+     */
+    raw.c_iflag &= ~(IXON | ICRNL);
+    /*
+     * OPOST — output processing. When on, the terminal translates '\n'
+     *         into '\r\n' (carriage return + newline) on output. We turn
+     *         it off for exact control over what bytes reach the screen.
+     *         This means we must write '\r\n' ourselves when we want a
+     *         new line.
+     */
+    raw.c_oflag &= ~(OPOST);
     raw.c_cc[VMIN] = 0;                  /* read returns immediately */
     raw.c_cc[VTIME] = 1;                 /* 100ms timeout */
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
@@ -212,6 +243,26 @@ terminal will be left in a broken state. Use `atexit(disable_raw_mode)`.
 
 ANSI escape codes are special character sequences that control the terminal.
 They all start with `\x1b[` (ESC + `[`).
+
+> **How ANSI escape sequences work:** All sequences begin with the **ESC** byte
+> (0x1B in hex, 27 in decimal, written as `\x1b` or `\033` in C). The `[`
+> character after ESC is called the **CSI** (Control Sequence Introducer).
+> After the CSI come optional numeric parameters separated by `;`, then a
+> single letter that tells the terminal what to do.
+>
+> ```
+>   \x1b  [  2  ;  5  H
+>    │    │  │     │  │
+>    │    │  │     │  └── 'H' = command: move cursor to position
+>    │    │  │     └───── column 5
+>    │    │  └─────────── row 2
+>    │    └────────────── CSI (Control Sequence Introducer)
+>    └─────────────────── ESC byte (0x1B)
+> ```
+>
+> So `\x1b[2;5H` means "move the cursor to row 2, column 5." The letter at
+> the end determines the action: `H` = cursor position, `J` = erase display,
+> `m` = set color/style, and so on.
 
 ### Cursor Movement
 
@@ -354,3 +405,24 @@ Functions to implement:
 In the next module, we will wire these pieces together into a working terminal
 text editor: raw mode, key reading, the event loop, file loading and saving.
 But first — master the gap buffer. It is the foundation everything else builds on.
+
+### Reading Real Code: kilo.c
+
+Kilo is a complete text editor in ~1000 lines of C, written by Salvatore
+Sanfilippo (creator of Redis). It uses the exact same techniques you've
+learned: raw terminal mode, escape codes, and a simple buffer.
+
+What to look for:
+- **editorOpen()**: How it reads a file line by line
+- **editorRefreshScreen()**: The render loop — clear, draw, position cursor
+- **editorProcessKeypress()**: The event loop — read key, dispatch action
+- **Raw mode setup**: Compare with your termios code
+
+It's one of the best "learn by reading" C codebases. Every line is
+understandable with what you've learned in this module.
+
+Source: https://github.com/antirez/kilo
+
+---
+
+[← Previous: Module 21: Processes & Concurrency](../21-process-concurrency/README.md) | [Next: Module 23: Git Internals →](../23-git-internals/README.md)

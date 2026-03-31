@@ -114,6 +114,44 @@ This grammar ensures `*` and `/` bind tighter than `+` and `-`:
 - `parse_term()` handles `*` and `/`
 - `parse_factor()` handles numbers and parenthesized sub-expressions
 
+Here is the exact mapping from grammar to code:
+
+```
+  Grammar rule:                         C function:
+  ─────────────                         ───────────
+  expr → term (('+' | '-') term)*       int parse_expr() {
+                                            int result = parse_term();
+                                            while (current == '+' || current == '-') {
+                                                char op = current;
+                                                advance();
+                                                int right = parse_term();
+                                                if (op == '+') result += right;
+                                                else result -= right;
+                                            }
+                                            return result;
+                                        }
+```
+
+The translation rules are mechanical:
+- Each grammar rule becomes a **function**
+- Alternatives (`|`) become **if/else**
+- Repetition (`*`) becomes a **while loop**
+- Sequence (one thing after another) becomes **sequential function calls**
+
+**Why does this grammar make `*` bind tighter than `+`?** Because
+`parse_expr()` calls `parse_term()`, which calls `parse_factor()`. The
+deeper the call, the tighter the binding. When parsing `2 + 3 * 4`,
+`parse_expr` handles `+`, but by the time it sees `*`, `parse_term` has
+already grabbed `3 * 4` as a single term and returned `12`.
+
+**Token lookahead:** In recursive descent, the parser looks at the
+CURRENT token to decide which rule to apply. This is called "lookahead".
+For example, `parse_factor()` checks: is the current token a NUMBER?
+Parse it. Is it `(`? Parse a sub-expression. This works because each
+alternative starts with a different token — we only need to look one
+token ahead. This is called **LL(1) parsing** (Left-to-right, Leftmost
+derivation, 1 token of lookahead).
+
 Each function calls the one below it, which naturally gives higher-precedence
 operators their tighter binding.
 
@@ -196,3 +234,7 @@ make test         # build and run solutions to verify correctness
    operators are parsed at higher levels.
 4. **Every language** you use (C, Python, SQL, JSON, HTML) goes through this
    same tokenizer -> parser -> AST -> executor pipeline.
+
+---
+
+[← Previous: Module 24 — Database: Key-Value Store](../24-database-key-value-store/README.md) | [Next: Module 26: Network & Socket Programming →](../26-network-socket-programming/README.md)

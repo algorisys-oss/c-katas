@@ -32,10 +32,19 @@ test: solutions
 	@echo ""
 	@echo "All solution tests complete."
 
+# --- Debug exercise targets ---
+
+debug: exercises/debug_concurrency.c
+	$(CC) $(CFLAGS) exercises/debug_concurrency.c -o exercises/debug_concurrency -lpthread
+
+debug-solution: solutions/debug_concurrency.c
+	$(CC) $(CFLAGS) solutions/debug_concurrency.c -o solutions/debug_concurrency -lpthread
+
 # --- Clean up ---
 
 clean:
 	rm -f producer_consumer parallel_sum
 	rm -f sol-producer_consumer sol-parallel_sum
+	rm -f exercises/debug_concurrency solutions/debug_concurrency
 
-.PHONY: exercises solutions test clean
+.PHONY: exercises solutions test clean debug debug-solution

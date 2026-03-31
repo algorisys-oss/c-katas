@@ -22,6 +22,88 @@ Same bytes, different interpretation:
   - An image viewer says: "not a valid image"
 ```
 
+## Understanding the Operating System (Quick Primer)
+
+Before we talk about files, you need to understand a few OS concepts that
+everything else builds on. These ideas come up again in Modules 21, 26, and
+beyond, so learning them now will pay off.
+
+### What is the Kernel?
+
+The **kernel** is the core of your operating system (Linux, macOS, Windows).
+It is the one program that runs with full access to the hardware — CPU, memory,
+disk, network. Every other program (your C code, your browser, your editor)
+runs in **user space** with restricted access.
+
+```
+  ┌─────────────────────────────────────────────────┐
+  │                  User Space                      │
+  │  ┌──────────┐  ┌──────────┐  ┌──────────┐      │
+  │  │ Your     │  │ Browser  │  │ Editor   │      │
+  │  │ Program  │  │          │  │          │      │
+  │  └────┬─────┘  └────┬─────┘  └────┬─────┘      │
+  │       │              │              │            │
+  │───────┼──────────────┼──────────────┼────────────│
+  │       ↓              ↓              ↓            │
+  │  ┌────────────────────────────────────────┐      │
+  │  │              KERNEL                    │      │
+  │  │  - Manages memory (who gets what)      │      │
+  │  │  - Manages files (read/write disk)     │      │
+  │  │  - Manages processes (who runs when)   │      │
+  │  │  - Manages devices (keyboard, screen)  │      │
+  │  └────────────────────────────────────────┘      │
+  │                      │                           │
+  │──────────────────────┼───────────────────────────│
+  │                      ↓                           │
+  │  ┌────────────────────────────────────────┐      │
+  │  │           HARDWARE                     │      │
+  │  │   CPU  │  RAM  │  Disk  │  Network     │      │
+  │  └────────────────────────────────────────┘      │
+  └─────────────────────────────────────────────────┘
+```
+
+### What is a System Call?
+
+Your program cannot touch the disk directly — only the kernel can. So when
+your code calls `open()`, `read()`, or `write()`, it makes a **system call**
+(or "syscall"): a request to the kernel to do something on its behalf.
+
+Think of it like a restaurant: you (user program) give your order to the
+waiter (system call), who takes it to the kitchen (kernel). You never walk
+into the kitchen yourself.
+
+### What is a Process?
+
+A **process** is a running program. Each process gets:
+- Its own **memory space** (it cannot see other programs' memory)
+- Its own **file descriptor table** (its own list of open files)
+- A **Process ID** (PID) — a unique number assigned by the kernel
+
+When you run `./my_program`, the kernel creates a new process for it.
+We'll cover processes deeply in Module 21.
+
+### What is an Inode?
+
+On disk, the kernel tracks each file using a data structure called an
+**inode** (index node). An inode stores the file's metadata:
+
+```
+  Inode #42:
+  ┌───────────────────────────────┐
+  │ Size: 1,024 bytes             │
+  │ Owner: you                    │
+  │ Permissions: rw-r--r--        │
+  │ Created: 2026-01-15 09:30    │
+  │ Data blocks: [102, 103, 107]  │  ← actual byte locations on disk
+  └───────────────────────────────┘
+```
+
+The *name* of the file (like `data.txt`) is NOT stored in the inode — it's
+stored in the directory, which maps names to inode numbers. This is why you
+can have multiple names (hard links) pointing to the same file.
+
+---
+
 ## File Descriptors — How Programs Talk to Files
 
 When your program opens a file, the operating system doesn't give you the file
@@ -123,6 +205,34 @@ bytes from that buffer until it's empty.
  │             │     └──────────────────────────┘ │     └──────────────┘
  └─────────────┘
 ```
+
+### Under the Hood: The Journey of a printf
+
+When you call `printf("Hello\n")`, the bytes travel through multiple layers:
+
+```
+  Your code:    printf("Hello\n")
+      │
+      ▼
+  stdio buffer: [H][e][l][l][o][\n]     ← buffered in user space
+      │                                    (flushed on \n or fflush)
+      ▼
+  write(1, "Hello\n", 6)                ← system call to kernel
+      │
+      ▼
+  Kernel buffer: [H][e][l][l][o][\n]    ← kernel's internal buffer
+      │
+      ▼
+  Terminal driver                        ← interprets escape codes
+      │
+      ▼
+  Screen                                 ← pixels appear!
+```
+
+Why all the buffering? System calls are expensive (~1000 ns each).
+Buffering combines many small writes into fewer large ones. That's
+why printf doesn't always appear immediately — it's waiting in the
+stdio buffer. Use fflush(stdout) to force it out.
 
 ### Opening and Closing Files
 
@@ -270,6 +380,36 @@ jump to any record instantly.
   Seek to record N: fseek(f, N * 64, SEEK_SET)
 ```
 
+### Fixed-Size Records as a Mini Database
+
+A powerful pattern: store data as fixed-size records in a binary file. Because
+every record is the same size, you can jump directly to record N using:
+`fseek(fp, N * record_size, SEEK_SET)`. This gives **O(1) random access** —
+no scanning needed!
+
+```
+  Record layout (each record = 72 bytes):
+  ┌──────┬──────┬─────┬──────────────────────────────┐
+  │  id  │ done │ len │         text (64 bytes)       │
+  │ u32  │ bool │ u8  │  (fixed, padded with zeros)   │
+  │4 byte│1 byte│1 byte│                               │
+  └──────┴──────┴─────┴──────────────────────────────┘
+
+  File with 3 records:
+  ┌────────────┬────────────┬────────────┐
+  │ Record 0   │ Record 1   │ Record 2   │
+  │ (72 bytes) │ (72 bytes) │ (72 bytes) │
+  └────────────┴────────────┴────────────┘
+
+  To read record 2:  fseek(fp, 2 * 72, SEEK_SET); fread(&rec, 72, 1, fp);
+  To update record 1: fseek(fp, 1 * 72, SEEK_SET); fwrite(&rec, 72, 1, fp);
+```
+
+This is how simple databases work before they need B-Trees. SQLite, Redis,
+and many databases started with exactly this pattern. When your data has a
+fixed structure and you know the record number, you get instant access without
+scanning the entire file.
+
 ## Buffering Strategies
 
 The C library supports three buffering modes:
@@ -385,6 +525,92 @@ if (header[0] == 0x89 && header[1] == 'P' &&
 }
 ```
 
+## Directory Traversal
+
+So far we've been working with individual files. But what if you want to list
+all the files in a directory, or walk an entire directory tree? The C library
+gives you `opendir()`, `readdir()`, and `closedir()` for this.
+
+```c
+#include <dirent.h>
+#include <stdio.h>
+
+DIR *dir = opendir("/home/you/projects");
+if (dir == NULL) {
+    perror("opendir");
+    return 1;
+}
+
+struct dirent *entry;
+while ((entry = readdir(dir)) != NULL) {
+    printf("%s\n", entry->d_name);
+}
+
+closedir(dir);
+```
+
+The `struct dirent` gives you two useful fields:
+- `d_name` — the filename (just the name, not the full path)
+- `d_type` — the type of entry: `DT_REG` (regular file), `DT_DIR` (directory),
+  `DT_LNK` (symlink), etc.
+
+### Recursive Directory Walking
+
+To walk an entire directory tree, you recurse into subdirectories:
+
+```
+  function walk(path):
+    dir = opendir(path)
+    for each entry in dir:
+      if entry is "." or "..": skip
+      full_path = path + "/" + entry.d_name
+      if entry is directory:
+        walk(full_path)    ← recurse!
+      else:
+        process(full_path)
+    closedir(dir)
+```
+
+**Important**: You must skip `.` (current directory) and `..` (parent
+directory), or your recursion will loop forever!
+
+In C, this looks like:
+
+```c
+#include <dirent.h>
+#include <stdio.h>
+#include <string.h>
+
+void walk(const char *path) {
+    DIR *dir = opendir(path);
+    if (dir == NULL) return;
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        /* Skip "." and ".." to avoid infinite recursion */
+        if (strcmp(entry->d_name, ".") == 0 ||
+            strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        /* Build the full path */
+        char full_path[1024];
+        snprintf(full_path, sizeof(full_path), "%s/%s", path, entry->d_name);
+
+        if (entry->d_type == DT_DIR) {
+            printf("[DIR]  %s\n", full_path);
+            walk(full_path);    /* recurse into subdirectory */
+        } else {
+            printf("[FILE] %s\n", full_path);
+        }
+    }
+    closedir(dir);
+}
+```
+
+This is how `find`, `ls -R`, and `tree` work under the hood. Every tool that
+searches or processes files in a directory tree uses this same pattern.
+
 ## Common Pitfalls
 
 1. **Forgetting to close files**: Every open file uses a file descriptor. If you
@@ -413,3 +639,7 @@ if (header[0] == 0x89 && header[1] == 'P' &&
 
 3. **todo_app** — Build a todo app backed by a binary file with fixed-size
    records and random access — a tiny database!
+
+---
+
+[← Previous: Module 15 — Trees & Heaps](../15-trees-heaps/README.md) | [Next: Module 17 — Text, Unicode & Encoding →](../17-text-unicode-encoding/README.md)

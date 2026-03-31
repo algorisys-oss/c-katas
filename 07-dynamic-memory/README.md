@@ -350,10 +350,56 @@ For this module, we'll use "caller frees" and always document it in comments.
 Here's a real use case that combines everything. A string builder that grows
 as needed:
 
-We haven't formally covered `struct` yet (that's Module 09), but the idea is
-simple: a struct groups related variables together under one name. `typedef`
-gives it a shorter name so you can write `StringBuilder` instead of
-`struct StringBuilder`. For now, just read these as "a bundle of related data."
+We haven't formally covered `struct` yet (that's Module 09), but we need a
+**quick preview** here because string builders bundle several related values
+together. Don't worry — Module 09 will cover all the details. Here's just
+enough to follow along:
+
+### Quick Preview: What is a struct?
+
+So far, every variable holds a single value: one `int`, one `char *`, etc.
+But a string builder needs **three things** working together: a pointer to
+the buffer, the current length, and the total capacity. Without `struct`,
+you'd need three separate variables — and you'd have to pass all three to
+every function. That's messy and error-prone.
+
+A `struct` solves this by grouping related variables into **one named bundle**:
+
+```
+  Without struct:                  With struct:
+  ┌──────────────────────────┐     ┌──────────────────────────┐
+  │ char *data;              │     │ StringBuilder sb;        │
+  │ int   length;            │     │   sb.data     → [...]    │
+  │ int   capacity;          │     │   sb.length   = 3        │
+  │                          │     │   sb.capacity = 8        │
+  │ (3 separate variables)   │     │ (1 variable, 3 fields)   │
+  └──────────────────────────┘     └──────────────────────────┘
+```
+
+The syntax is:
+
+```c
+/* Define the struct type */
+typedef struct {
+    char *data;      /* first field  */
+    int length;      /* second field */
+    int capacity;    /* third field  */
+} StringBuilder;
+
+/* Create one and access its fields with '.' */
+StringBuilder sb;
+sb.data     = malloc(8);
+sb.length   = 0;
+sb.capacity = 8;
+```
+
+- `typedef` lets you write `StringBuilder` instead of `struct StringBuilder`
+- Access fields with a dot: `sb.length`
+- If you have a *pointer* to a struct, use arrow: `ptr->length`
+  (this is shorthand for `(*ptr).length`)
+
+That's all you need for now. Module 09 covers memory layout, padding,
+nested structs, unions, and more.
 
 ```c
 typedef struct {
@@ -476,6 +522,308 @@ invaluable. Use them from day one.
 
 ---
 
+## GDB — The GNU Debugger
+
+When your program crashes, `printf` debugging is slow and incomplete. GDB lets
+you **pause your program, inspect every variable, and step through code line by
+line**. It's the most important tool in a systems programmer's toolkit.
+
+### Getting Started
+
+```bash
+# Always compile with -g (debug symbols) — otherwise GDB can't show your code
+gcc -g -Wall -Wextra -std=c99 -o myprogram myprogram.c
+
+# Run inside GDB
+gdb ./myprogram
+```
+
+### The 10 Commands You Need
+
+```
+Command              What it does
+──────────────────   ─────────────────────────────────────────────
+break main           Set a breakpoint at the start of main()
+break file.c:42      Set a breakpoint at line 42
+run                  Start the program (stops at first breakpoint)
+next                 Execute current line, step OVER function calls
+step                 Execute current line, step INTO function calls
+continue             Resume running until next breakpoint or crash
+print x              Show the value of variable x
+print *ptr           Dereference a pointer and show the value
+print arr[0]@10      Show 10 elements of array arr
+bt                   Backtrace — show the call stack (where am I?)
+watch var            Break whenever var changes (data breakpoint)
+quit                 Exit GDB
+```
+
+### Typical Debugging Session
+
+```
+$ gdb ./myprogram
+(gdb) break main
+Breakpoint 1 at 0x1149: file main.c, line 8.
+
+(gdb) run
+Starting program: ./myprogram
+Breakpoint 1, main () at main.c:8
+8       int *arr = malloc(10 * sizeof(int));
+
+(gdb) next
+9       arr[0] = 42;
+
+(gdb) print arr
+$1 = (int *) 0x5555555592a0
+
+(gdb) print arr[0]
+$2 = 42
+
+(gdb) next
+10      int *p = NULL;
+
+(gdb) next
+11      *p = 5;        ← about to crash!
+
+(gdb) next
+Program received signal SIGSEGV, Segmentation fault.
+
+(gdb) bt
+#0  0x0000555555555178 in main () at main.c:11
+                                         ↑
+                            GDB tells you EXACTLY which line crashed
+```
+
+### When to Use GDB
+
+- **Segfault**: run in GDB, let it crash, type `bt` to see where
+- **Wrong output**: set breakpoints, inspect variables at each step
+- **Infinite loop**: run in GDB, press Ctrl+C to pause, type `bt` to see where
+  you're stuck, type `print` to check loop variables
+
+---
+
+## strace — See Every System Call
+
+`strace` shows you every **system call** your program makes — every file opened,
+every byte read/written, every memory allocation. It answers: "what is my
+program actually DOING?"
+
+```bash
+# Basic usage
+strace ./myprogram
+
+# Filter to specific calls (less noise)
+strace -e open,read,write ./myprogram
+
+# Show timestamps
+strace -t ./myprogram
+
+# Follow child processes (useful with fork)
+strace -f ./myprogram
+```
+
+### Reading strace Output
+
+```
+openat(AT_FDCWD, "data.txt", O_RDONLY) = 3
+       ↑ filename                        ↑ returned fd=3
+
+read(3, "Hello, world!\n", 4096)       = 14
+     ↑ fd=3                              ↑ read 14 bytes
+
+write(1, "Hello, world!\n", 14)        = 14
+      ↑ fd=1 = stdout                    ↑ wrote 14 bytes
+
+close(3)                                = 0
+
+openat(AT_FDCWD, "missing.txt", O_RDONLY) = -1 ENOENT (No such file)
+                                            ↑ FAILED — file not found!
+```
+
+### When to Use strace
+
+- **"File not found" but it exists**: strace shows you exactly which path the
+  program tried to open
+- **"Permission denied"**: strace shows the permission check that failed
+- **Slow program**: strace -c shows a summary of time spent in each syscall
+- **Network debugging**: strace shows connect(), send(), recv() calls
+
+```bash
+# Summary mode — which syscalls take the most time?
+strace -c ./myprogram
+
+% time     seconds  calls    syscall
+------ ----------- --------- --------
+ 89.32    0.045123       42  read      ← 89% of time in read!
+  5.21    0.002631        3  write
+  3.47    0.001752       45  mmap
+  2.00    0.001011        1  execve
+```
+
+### The Debugging Toolkit Summary
+
+```
+Tool              Best for                      Speed
+────────────────  ──────────────────────────     ─────
+valgrind          Memory leaks, invalid reads    Slow (20-50x)
+AddressSanitizer  Same as valgrind               Fast (2x)
+gdb               Crashes, wrong logic, loops    No overhead
+strace            File/network/syscall issues    Minimal overhead
+```
+
+Use them ALL. A professional C programmer reaches for these tools instinctively,
+the same way a carpenter reaches for a level or a square.
+
+---
+
+## Error Handling Patterns in C
+
+C has no exceptions, no try/catch, no Result type. Error handling is YOUR
+responsibility. Here are the patterns that professional C code uses.
+
+### Pattern 1: Return Codes
+
+The simplest pattern: return 0 for success, -1 (or another value) for failure.
+
+```c
+int open_file(const char *path)
+{
+    int fd = open(path, O_RDONLY);
+    if (fd == -1) {
+        return -1;  /* caller checks this */
+    }
+    return fd;      /* success: return the fd */
+}
+```
+
+Convention used by almost all C libraries:
+
+```
+  0 or positive  = success (often the actual result)
+  -1 or NULL     = failure
+  errno          = WHY it failed
+```
+
+### Pattern 2: errno — The Global Error Code
+
+When a system call fails, it sets a global variable called `errno` to a code
+explaining what went wrong. You can read it with `strerror()` or `perror()`:
+
+```c
+#include <errno.h>
+#include <string.h>
+
+FILE *fp = fopen("data.txt", "r");
+if (fp == NULL) {
+    printf("Error: %s\n", strerror(errno));
+    /* might print: "Error: No such file or directory" */
+}
+
+/* Or use perror() which adds the function name: */
+perror("fopen");
+/* prints: "fopen: No such file or directory" */
+```
+
+Common errno values:
+
+```
+  ENOENT  — file not found
+  EACCES  — permission denied
+  ENOMEM  — out of memory
+  EINVAL  — invalid argument
+  EEXIST  — file already exists
+```
+
+### Pattern 3: The goto cleanup Pattern
+
+This is the ONE good use of `goto` in C. When a function allocates multiple
+resources, you need to clean them all up on any error. Without goto, you
+get deeply nested if/else pyramids. With goto, the cleanup is clean:
+
+```c
+int process_file(const char *path)
+{
+    int result = -1;
+    FILE *fp = NULL;
+    char *buf = NULL;
+    char *line = NULL;
+
+    fp = fopen(path, "r");
+    if (!fp) {
+        perror("fopen");
+        goto cleanup;
+    }
+
+    buf = malloc(4096);
+    if (!buf) {
+        perror("malloc");
+        goto cleanup;
+    }
+
+    line = malloc(256);
+    if (!line) {
+        perror("malloc");
+        goto cleanup;
+    }
+
+    /* ... do work with fp, buf, and line ... */
+
+    result = 0;  /* success — only reached if nothing failed */
+
+cleanup:
+    free(line);      /* free(NULL) is safe — does nothing */
+    free(buf);
+    if (fp) fclose(fp);
+    return result;
+}
+```
+
+Why this works:
+- Every resource is initialized to NULL at the top
+- On ANY error, we jump to cleanup which frees everything
+- `free(NULL)` is safe by the C standard — no need to check
+- `fclose(NULL)` is NOT safe, so we check `fp` before closing
+- The function has ONE exit point, making it easy to verify
+  that nothing is leaked
+
+This pattern is used extensively in the Linux kernel, SQLite, PostgreSQL,
+and most professional C codebases. It's not "bad" goto — it's a clean
+resource management pattern.
+
+### Pattern 4: Error Output Parameter
+
+When a function returns a value AND needs to report errors:
+
+```c
+/* Returns the parsed number, sets *err to 1 on failure */
+int parse_int(const char *str, int *err)
+{
+    *err = 0;
+    char *end;
+    long val = strtol(str, &end, 10);
+    if (end == str || *end != '\0') {
+        *err = 1;
+        return 0;
+    }
+    return (int)val;
+}
+
+/* Usage: */
+int err;
+int n = parse_int("42abc", &err);
+if (err) {
+    printf("Invalid number!\n");
+}
+```
+
+### The Golden Rule
+
+**Always check return values.** Every malloc, every fopen, every read.
+Ignoring errors in C doesn't cause exceptions — it causes silent
+corruption, crashes hours later, or security vulnerabilities.
+
+---
+
 ## Common Patterns
 
 ### Pattern 1: Allocate, use, free
@@ -545,3 +893,7 @@ Compile and test:
 make exercises    # build your code
 make test         # build and run solutions to verify
 ```
+
+---
+
+[← Previous: Module 06 — Pointers & Arrays](../06-pointers-arrays/README.md) | [Next: Module 08 — Mastering Memory Management →](../08-mastering-memory-management/README.md)

@@ -32,10 +32,19 @@ test: solutions
 	@echo ""
 	@echo "All solution tests complete."
 
+# --- Debug exercise targets ---
+
+debug: exercises/debug_bst.c
+	$(CC) $(CFLAGS) exercises/debug_bst.c -o exercises/debug_bst
+
+debug-solution: solutions/debug_bst.c
+	$(CC) $(CFLAGS) solutions/debug_bst.c -o solutions/debug_bst
+
 # --- Clean up ---
 
 clean:
 	rm -f bst heap
 	rm -f sol-bst sol-heap
+	rm -f exercises/debug_bst solutions/debug_bst
 
-.PHONY: exercises solutions test clean
+.PHONY: exercises solutions test clean debug debug-solution

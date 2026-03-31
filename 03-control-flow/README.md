@@ -592,3 +592,7 @@ comments carefully — they tell you exactly what to do.
 
 Good luck. Take your time, trace through your code by hand before running it,
 and remember: the compiler is your friend, not your enemy.
+
+---
+
+[← Previous: Module 02 — Types, Variables & Operators](../02-types-variables-operators/README.md) | [Next: Module 04 — Functions & Program Structure →](../04-functions-program-structure/README.md)

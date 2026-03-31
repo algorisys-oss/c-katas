@@ -16,6 +16,14 @@ the details. You'll build everything from scratch.
 
 All of ML is built on vectors and matrices. Let's start there.
 
+**Why do vectors and matrices matter in ML?** In ML, data is represented as
+vectors. A single data point (e.g., a house) has features like
+[square_feet, num_bedrooms, price] — that's a 3D vector. A dataset of 1000
+houses is a matrix with 1000 rows and 3 columns. Neural networks are
+essentially matrix multiplications followed by simple functions. Each layer
+multiplies the input vector by a weight matrix. That's why linear algebra is
+the language of ML.
+
 ### Vectors
 
 A **vector** is just an ordered list of numbers:
@@ -76,6 +84,10 @@ C[1][1] = 4×8 + 5×10 + 6×12 = 32 + 50 + 72 = 154
 ```
 
 **Key rule**: inner dimensions must match. (2×**3**) × (**3**×2) = (2×2).
+
+Think of matrix multiplication as computing dot products row-by-column.
+Row i of the result = dot product of row i of the first matrix with each
+column of the second matrix.
 
 ### Transpose
 
@@ -155,6 +167,13 @@ The simplest ML model: fit a line to data.
 ```
 MSE = (1/n) × Σ (predicted - actual)²
 ```
+
+Why square the error instead of using absolute value? Two reasons:
+(1) Squaring penalizes large errors MORE than small ones — an error of 10 is
+100x worse than an error of 1, which is exactly what we want.
+(2) The squared function is smooth and differentiable everywhere, which means
+we can compute gradients for gradient descent. Absolute value has a sharp
+corner at zero where the gradient is undefined.
 
 **Gradients** (how to update m and b):
 
@@ -244,7 +263,19 @@ For each neuron in output layer:
 ### Backpropagation (The Chain Rule)
 
 Training means adjusting weights to reduce error. **Backpropagation** does this
-by flowing the error **backwards** through the network:
+by flowing the error **backwards** through the network.
+
+Here's the intuition: imagine a factory assembly line with three workers. The
+final product has a defect. How much is each worker responsible? You trace
+backwards: if the last worker made the product 20% worse, and the middle
+worker's contribution was amplified by 3x through the last worker, then the
+middle worker is 3 x 20% = 60% responsible. That's the chain rule — you
+multiply the "responsibility" (gradient) backwards through each stage.
+
+Backpropagation is just the chain rule applied systematically from the output
+layer back to the input layer. Each layer computes: "how much did MY weights
+contribute to the final error?" Then it adjusts its weights to reduce that
+contribution.
 
 ```
   FORWARD PASS (compute outputs):
@@ -271,13 +302,35 @@ The **chain rule** from calculus makes this work:
 Where:
   ∂loss/∂output      = 2 × (predicted - actual)     ← how loss changes with output
   ∂output/∂net       = sigmoid'(net) = out×(1-out)   ← sigmoid derivative
+                        (This elegant formula comes from calculus — the
+                         derivative of 1/(1+e^(-x)). The beautiful part: you
+                         don't need the original input x to compute the
+                         derivative — you only need the OUTPUT. Since you
+                         already computed the output during the forward pass,
+                         computing the gradient during backpropagation is
+                         almost free.)
   ∂net/∂weight       = hidden_value                   ← input to this weight
 ```
 
 ### The XOR Problem
 
 XOR is the classic neural network test case because it's **not linearly
-separable** — you can't draw a single straight line to separate 0s from 1s:
+separable** — you can't draw a single straight line to separate 0s from 1s.
+
+Compare XOR with AND to see why:
+
+```
+  AND (linearly separable):     XOR (NOT linearly separable):
+
+    1 | - | +                     1 | + | -
+    0 | - | -                     0 | - | +
+      0   1                         0   1
+
+  A single line can separate     No single line can separate
+  the + from the - cases.        + from - cases!
+```
+
+Here's XOR plotted with actual values:
 
 ```
   x₂
@@ -290,8 +343,9 @@ separable** — you can't draw a single straight line to separate 0s from 1s:
        0                 1
 ```
 
-A network with one hidden layer (2 neurons) can learn XOR by creating two
-internal features that combine to solve it.
+A hidden layer solves this by TRANSFORMING the inputs into a new space where
+the problem IS linearly separable. The hidden neurons learn to create new
+features that make the separation possible.
 
 ---
 
@@ -327,6 +381,14 @@ looks like this:
 If the loss **goes up** or **oscillates wildly**, your learning rate is too high.
 If it barely moves, your learning rate is too low.
 
+**Important caveat**: gradient descent is guaranteed to find the minimum only
+for CONVEX functions (bowl-shaped — one lowest point). Neural network loss
+landscapes are NOT convex — they have many hills and valleys (local minima).
+In practice, gradient descent works surprisingly well for neural networks
+despite this, partly because most local minima in high-dimensional spaces are
+"good enough." But this is why training the same network twice can give
+different results — you might end up in different valleys.
+
 ---
 
 ## Exercises
@@ -356,3 +418,7 @@ Build a single-hidden-layer neural network:
 3. **Neural networks** are layers of weighted sums + non-linear activations
 4. **Backpropagation** uses the chain rule to compute how each weight affects the loss
 5. **XOR** proves you need hidden layers — a single layer can only learn linear boundaries
+
+---
+
+[← Previous: Module 28c — Ray Tracing & 3D Graphics](../28c-ray-tracing-3d-graphics/README.md) | [Next: Module 30 — Capstone Project →](../30-capstone-project/README.md)

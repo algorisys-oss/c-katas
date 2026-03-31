@@ -32,10 +32,19 @@ test: solutions
 	@echo ""
 	@echo "All solution tests complete."
 
+# --- Debug exercise targets ---
+
+debug: exercises/debug_list.c
+	$(CC) $(CFLAGS) exercises/debug_list.c -o exercises/debug_list
+
+debug-solution: solutions/debug_list.c
+	$(CC) $(CFLAGS) solutions/debug_list.c -o solutions/debug_list
+
 # --- Clean up ---
 
 clean:
 	rm -f linked_list lru_cache
 	rm -f sol-linked_list sol-lru_cache
+	rm -f exercises/debug_list solutions/debug_list
 
-.PHONY: exercises solutions test clean
+.PHONY: exercises solutions test clean debug debug-solution

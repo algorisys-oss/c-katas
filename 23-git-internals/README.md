@@ -129,6 +129,18 @@ Completely different outputs for a one-character change! This is called the
 Git has three core object types. Each is stored as:
 `<type> <size>\0<content>`, then SHA-1 hashed.
 
+Let's break down this format:
+- `<type>` is the literal ASCII string `"blob"`, `"tree"`, or `"commit"`
+- `<size>` is the ASCII decimal representation of the content length in bytes
+  (e.g., the string `"14"`, not the binary number 14)
+- `\0` is a single **null byte** (`0x00`), not the two characters backslash and
+  zero — it separates the header from the content
+- `<content>` is the raw bytes of the object
+
+For example, a blob containing `"Hello, world!\n"` (14 bytes) is stored as:
+`blob 14\0Hello, world!\n` — Git then SHA-1 hashes this **entire** string
+(header + null byte + content) to produce the object's 40-character hex ID.
+
 ### Blob — File Content
 
 A blob stores the raw content of a file. It does NOT store the filename — just the
@@ -151,6 +163,16 @@ tree <size>\0
   100644 readme.md\0<20-byte blob hash>
   040000 src\0<20-byte tree hash>
 ```
+
+The numbers before each filename are **Unix file mode permissions**:
+- `100644` = regular file, readable and writable by owner (standard Unix file permissions)
+- `040000` = directory (the leading `04` means "directory" in Unix)
+- `100755` = executable file (you'd see this for scripts and compiled programs)
+
+The `\0` between the filename and the 20-byte hash is a literal **null byte** (byte
+value `0x00`), used as a separator. Since filenames can't contain null bytes, this
+guarantees unambiguous parsing — the parser reads characters until it hits `0x00`,
+and knows the next 20 bytes are the binary SHA-1 hash.
 
 ### Commit — Snapshot + Metadata
 
@@ -326,6 +348,14 @@ depends on the hashes of its children. This creates a chain of trust:
 │    ENTIRE chain up to the commit!                        │
 │                                                          │
 │  This is how Git detects corruption and tampering.       │
+│                                                          │
+│  The dependency chain step by step:                      │
+│  Changing a blob changes its SHA-1 hash. The tree that   │
+│  lists that blob stores the old hash, so its content     │
+│  changes too — giving it a new hash. The commit that     │
+│  points to that tree now has a different tree hash, so   │
+│  the commit hash also changes. One changed byte          │
+│  cascades through the entire chain.                      │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -353,3 +383,7 @@ systems that need to guarantee data hasn't been tampered with.
 - History forms a **DAG** — directed acyclic graph of commits
 - The Merkle tree structure guarantees **integrity** — any change is detectable
 - Understanding Git internals makes you *much* better at using Git day-to-day
+
+---
+
+[← Previous: Module 22 — Building a Text Editor](../22-building-text-editor/README.md) | [Next: Module 24 — Database: Key-Value Store →](../24-database-key-value-store/README.md)

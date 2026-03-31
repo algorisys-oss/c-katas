@@ -397,6 +397,60 @@ util.o: util.c util.h
 Make walks this graph bottom-up. If `util.c` is newer than `util.o`, it
 rebuilds `util.o`, then `program`. But `main.o` is untouched.
 
+### How Make Decides What to Rebuild — Timestamps
+
+Make uses a simple rule: **if a source file is newer than its target, rebuild
+the target.** "Newer" means the file's last-modified timestamp is more recent.
+
+Let's trace through a real scenario:
+
+```
+  Scenario: You edit util.c. What does `make` rebuild?
+
+  File               Last Modified     Status
+  ──────────────     ───────────────   ──────────────
+  main.c             10:00 AM          unchanged
+  util.h             10:00 AM          unchanged
+  util.c             10:15 AM          ← YOU EDITED THIS
+  main.o             10:01 AM          newer than main.c ✓ (skip)
+  util.o             10:01 AM          OLDER than util.c ✗ (rebuild!)
+  program            10:02 AM          depends on util.o (rebuild!)
+
+  Make's actions:
+  1. Check main.o: main.c (10:00) < main.o (10:01) → up to date, skip
+  2. Check util.o: util.c (10:15) > util.o (10:01) → STALE, rebuild
+     → runs: gcc -c util.c -o util.o
+  3. Check program: util.o just changed → STALE, rebuild
+     → runs: gcc main.o util.o -o program
+
+  Result: only 2 commands run instead of 3. That's the point of Make!
+```
+
+### Debugging Make: Why Isn't This Rebuilding?
+
+When Make doesn't rebuild something you expected, use these tools:
+
+```bash
+# Dry run — show what WOULD be rebuilt, without actually doing it
+make -n
+
+# Force rebuild everything (ignore timestamps)
+make -B
+
+# Show Make's reasoning (very verbose — pipe to less)
+make -d | less
+
+# Check timestamps yourself
+ls -l --time=ctime main.c main.o
+```
+
+Common gotchas:
+- **Forgot to list a header as a dependency**: If `main.c` includes `util.h`
+  but the Makefile doesn't list `util.h` as a prerequisite of `main.o`, then
+  editing `util.h` won't trigger a rebuild of `main.o`. Always list headers!
+- **Clock skew**: If your files have future timestamps (e.g., from a VM or
+  network drive), Make gets confused. Use `touch` to fix timestamps.
+
 ### Variables
 
 ```makefile
@@ -563,3 +617,27 @@ make exercises    # Build your solutions
 make test         # Build and run reference solutions
 make clean        # Remove compiled files
 ```
+
+---
+
+## Phase 4 Complete — Review & Connect
+
+You now have all the building blocks of a professional C programmer:
+
+- **Data structures**: lists, stacks, queues, hash tables, trees, heaps
+- **Algorithms**: sorting, searching, graph traversal
+- **File I/O**: reading/writing files, binary formats
+- **Text processing**: Unicode, encoding, string manipulation
+- **Build systems**: Makefiles, separate compilation, linking
+
+**The key insight**: Every program you use daily is built from these
+pieces. A database is B-trees + file I/O + parsing. A web browser is
+networking + parsing + rendering. A game is data structures + graphics
++ input handling.
+
+**What's next**: Phase 5 puts it all together — you'll build real
+systems: a text editor, a database, a network server, and more.
+
+---
+
+[← Previous: Module 18: Date & Time](../18-date-time/README.md) | [Next: Module 20 — Graphs →](../20-graphs/README.md)

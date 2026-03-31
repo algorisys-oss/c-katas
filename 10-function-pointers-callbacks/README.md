@@ -326,3 +326,27 @@ Compile and test:
 make exercises    # build your code
 make test         # build and run solutions to verify
 ```
+
+---
+
+## Phases 2-3 Complete — Review & Connect
+
+You've conquered pointers, memory, and compound types. Here's the big picture:
+
+- **Pointers** let you refer to data without copying it
+- **Dynamic memory** lets you allocate at runtime (but you own the cleanup)
+- **Structs** bundle related data; unions share space
+- **Function pointers** let you pass behavior as data (callbacks, dispatch tables)
+
+**The key insight**: C gives you raw access to memory. This is both its
+superpower (speed, control) and its danger (bugs, crashes). The patterns
+you've learned — ownership, null checks, free-what-you-allocate — are
+your safety net.
+
+**What's next**: Data structures (Phase 3) build on everything: pointers
+for linking nodes, malloc for creating them, structs for defining them,
+and function pointers for comparing them.
+
+---
+
+[← Previous: Module 09 — Structs, Unions & Compound Types](../09-structs-unions-compound-types/README.md) | [Next: Module 11 — Linked Lists →](../11-linked-lists/README.md)

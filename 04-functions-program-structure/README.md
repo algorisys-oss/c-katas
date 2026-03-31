@@ -239,6 +239,36 @@ frame is on the stack. When the function returns, those variables are gone.
 **Draw it!** Literally draw boxes on paper for each call. This is the single best
 way to understand function calls, and you will need this skill forever.
 
+### Under the Hood: What the CPU Actually Does on a Function Call
+
+When you call a function, the CPU does several things at the hardware level:
+
+1. **Push arguments** onto the stack (or pass in registers on modern CPUs)
+2. **Push the return address** — where to continue after the function returns
+3. **Jump** to the function's first instruction
+4. **Allocate local variables** — move the stack pointer to make room
+5. **Execute the function body**
+6. **Deallocate locals** — move the stack pointer back
+7. **Pop the return address** and jump back to the caller
+
+This is why local variables are "free" — they're just stack pointer arithmetic.
+And this is why recursion can overflow the stack — each call pushes more data
+without popping until the base case returns.
+
+```
+  Stack during add(3, 4) called from main:
+
+  High addr ┌─────────────────┐
+            │ main's locals   │
+            │ return address  │  ← main will return to _start
+            ├─────────────────┤
+            │ a = 3           │  ← add's parameters
+            │ b = 4           │
+            │ return address  │  ← add will return to main
+            │ result = 7      │  ← add's local variable
+  Low addr  └─────────────────┘  ← stack pointer (SP) is here
+```
+
 ---
 
 ## 6. Scope — Where a Name Is Visible
@@ -495,3 +525,7 @@ comments carefully — they tell you exactly what to do.
 
 Good luck. Trace through your function calls by hand, draw the stack frames,
 and remember: every argument is a copy.
+
+---
+
+[← Previous: Module 03 — Control Flow](../03-control-flow/README.md) | [Next: Module 05 — Recursion & Algorithmic Thinking →](../05-recursion-algorithmic-thinking/README.md)

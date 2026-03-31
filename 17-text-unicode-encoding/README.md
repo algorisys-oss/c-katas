@@ -184,6 +184,56 @@ Let's decode those bytes back:
 4. **Sorted order preserved**: Byte-wise sorting of UTF-8 gives the same order as
    codepoint sorting (for the same number of bytes).
 
+### Why UTF-8 Won — And Others Didn't
+
+UTF-8 wasn't the first Unicode encoding — UTF-16 and UTF-32 came first. So why
+does almost the entire internet use UTF-8 today? Here's the story:
+
+**The problem UTF-8 solved**: In the early 1990s, the world had hundreds of
+incompatible text encodings — Shift-JIS for Japanese, KOI8-R for Russian,
+ISO-8859-1 for Western European. If you opened a Japanese file with a Russian
+encoding, you'd see garbage (**mojibake**). Unicode was the solution — one
+universal character set — but the question was: *how do you encode it as bytes?*
+
+```
+  The three contenders:
+
+  Encoding   English 'A'   Storage     Works with       Byte order
+                           per char    existing C code?  problem?
+  ─────────  ─────────────  ─────────  ────────────────  ──────────
+  UTF-32     00 00 00 41    4 bytes    NO (NUL bytes     YES (BOM)
+                            always     break strlen)
+  UTF-16     00 41          2-4 bytes  NO (same issue)   YES (BOM)
+  UTF-8      41             1-4 bytes  YES!              NO!
+```
+
+**Why UTF-32 lost**: It wastes 4 bytes for every character. An English text
+file becomes 4x larger. Unacceptable for storage and bandwidth.
+
+**Why UTF-16 lost** (for most purposes):
+- It **embeds NUL bytes** (0x00) in ordinary text. For example, 'A' is encoded
+  as `00 41`. C string functions like `strlen()` see the `0x00` and think the
+  string ended. Every C string function would need to be rewritten.
+- It has a **byte-order problem**: is 'A' stored as `00 41` (big-endian) or
+  `41 00` (little-endian)? You need a special marker called a **BOM** (Byte
+  Order Mark) at the start of every file to tell the reader which order to use.
+- It's *still* variable-width (2 or 4 bytes), so you don't get true random access.
+
+**Why UTF-8 won**:
+- **Backward compatible**: Every existing ASCII file is already valid UTF-8.
+  Billions of existing text files, configs, source code — they all just work.
+  No conversion, no migration, no breakage.
+- **No NUL bytes in normal text**: C code, Unix tools, network protocols —
+  everything that treats `0x00` as a terminator works without modification.
+- **No byte-order issues**: UTF-8 is a stream of bytes, not multi-byte integers.
+  There's only one way to read it. No BOM needed.
+- **Space efficient for Latin text**: English uses 1 byte per character (same
+  as ASCII). Chinese/Japanese use 3 bytes. This is a great trade-off for the
+  internet, which uses a lot of ASCII (HTML tags, URLs, headers).
+
+The result: UTF-8 now accounts for over 98% of web pages. It is the default
+encoding for Linux, macOS, most programming languages, JSON, and the web.
+
 ---
 
 ## UTF-16 and UTF-32
@@ -293,9 +343,11 @@ To properly work with UTF-8 strings in C, you need to:
 
 ## Exercises
 
-| File    | What You'll Build                             | Tests |
-|---------|-----------------------------------------------|-------|
-| utf8.c  | UTF-8 encoder, decoder, strlen, validator     | 16    |
+| File           | What You'll Build                             | Tests |
+|----------------|-----------------------------------------------|-------|
+| utf8.c         | UTF-8 encoder, decoder, strlen, validator     | 16    |
+| charcount.c    | UTF-8 character counter & navigator           | 18    |
+| text_stats.c   | Word/line counting, case conversion           | 18    |
 
 ### utf8.c — UTF-8 from Scratch
 
@@ -308,3 +360,27 @@ You'll implement four functions:
 
 This is real-world code — every text editor, web browser, and database does
 exactly this internally.
+
+### charcount.c — UTF-8 Character Counter
+
+C's `strlen()` counts bytes, not characters. You'll build functions that
+correctly count and navigate multi-byte UTF-8 characters:
+
+- **`utf8_char_width`**: Given a first byte, determine how many bytes the character uses (1-4)
+- **`utf8_char_count`**: Count characters (not bytes) in a UTF-8 string
+- **`utf8_byte_count`**: Find the byte offset of the Nth character
+- **`is_ascii`**: Check whether a string is pure ASCII
+
+### text_stats.c — Text Statistics
+
+Build a set of text analysis functions that work on ASCII characters
+(and are safe for UTF-8 strings since they leave non-ASCII bytes untouched):
+
+- **`count_words`**: Count whitespace-separated words
+- **`count_lines`**: Count lines (based on `\n` characters)
+- **`to_uppercase`** / **`to_lowercase`**: Convert ASCII letters in place
+- **`longest_word_length`**: Find the length of the longest word
+
+---
+
+[← Previous: Module 16: File I/O & the Unix Philosophy](../16-file-io-unix-philosophy/README.md) | [Next: Module 18: Date & Time →](../18-date-time/README.md)

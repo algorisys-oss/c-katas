@@ -629,3 +629,7 @@ make test
 
 *Next up: Module 01 — where you'll actually write and compile your first C
 program!*
+
+---
+
+[Next: Module 01 — Setup & First Program →](../01-setup-first-program/README.md)

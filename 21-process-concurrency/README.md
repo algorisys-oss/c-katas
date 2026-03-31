@@ -24,6 +24,33 @@ A **process** is a running program. When you type `./my_program`, the OS:
 Every process gets its own *isolated* memory. Process A cannot read or write
 Process B's memory --- the OS enforces this with virtual memory hardware.
 
+> **What is virtual memory?** Each process thinks it has the entire memory to
+> itself --- its own addresses starting from 0, its own stack, its own heap.
+> But these are **virtual addresses**, not real physical memory locations.
+>
+> The CPU has a component called the **MMU** (Memory Management Unit) that
+> translates virtual addresses to physical addresses on every memory access.
+> The OS sets up a **page table** for each process that tells the MMU: "when
+> process A says address 0x4000, that is really physical address 0x8A000."
+>
+> This is how isolation works: process A and process B have completely separate
+> page tables. If process A tries to access an address that belongs to process
+> B, the MMU finds no valid mapping and triggers a **page fault** --- the OS
+> kills the offending process (that is the "segmentation fault" you have seen).
+>
+> ```
+>   Process A                        Process B
+>   Virtual Addr    Physical RAM     Virtual Addr
+>   ┌──────────┐   ┌──────────────┐  ┌──────────┐
+>   │ 0x1000   │──▶│ 0x8A000      │  │ 0x1000   │──▶ 0x5C000
+>   │ 0x2000   │──▶│ 0x3F000      │  │ 0x2000   │──▶ 0x91000
+>   │ 0x3000   │──▶│ 0x12000      │  │ 0x3000   │──▶ 0x44000
+>   └──────────┘   └──────────────┘  └──────────┘
+>        │              ▲                  │
+>        └── MMU + page table ─────────────┘
+>   Same virtual address 0x1000 maps to different physical memory!
+> ```
+
 ```
   Process A (PID 1234)          Process B (PID 5678)
   ┌──────────────────┐          ┌──────────────────┐
@@ -106,6 +133,41 @@ Key points:
 - Each has its own *copy* of all variables --- changes in one don't affect the other
 - If `fork()` fails (system out of resources), it returns -1
 
+### Under the Hood: What ls | grep .c Actually Does
+
+When you type `ls | grep .c` in the shell, here's exactly what happens:
+
+```
+  Shell process (PID 100)
+      │
+      ├── pipe() → creates pipe [read_fd, write_fd]
+      │
+      ├── fork() → child A (PID 101) — will become 'ls'
+      │    │
+      │    ├── close(read_fd)          ← ls doesn't read from pipe
+      │    ├── dup2(write_fd, STDOUT)  ← redirect stdout to pipe
+      │    ├── close(write_fd)         ← original fd no longer needed
+      │    └── exec("ls")             ← replace with ls program
+      │
+      ├── fork() → child B (PID 102) — will become 'grep'
+      │    │
+      │    ├── close(write_fd)         ← grep doesn't write to pipe
+      │    ├── dup2(read_fd, STDIN)    ← redirect stdin from pipe
+      │    ├── close(read_fd)
+      │    └── exec("grep", ".c")     ← replace with grep program
+      │
+      ├── close(read_fd)              ← shell doesn't use the pipe
+      ├── close(write_fd)
+      ├── wait(PID 101)               ← wait for ls to finish
+      └── wait(PID 102)               ← wait for grep to finish
+
+  Data flow:
+  ls writes filenames to pipe → grep reads from pipe, filters, prints matches
+```
+
+This is the Unix philosophy in action: small programs connected by pipes.
+Every `|` in a shell command creates this exact pattern.
+
 ---
 
 ## exec() — Replacing a Process Image
@@ -141,6 +203,21 @@ if (pid == 0) {
     int status;
     waitpid(pid, &status, 0);
     printf("Child exited with status %d\n", WEXITSTATUS(status));
+    /*
+     * Why WEXITSTATUS(status) instead of just status?
+     *
+     * The status integer from wait()/waitpid() is NOT just the exit code.
+     * The OS packs multiple pieces of information into that one int:
+     *   - Did the child exit normally, or was it killed by a signal?
+     *   - If it exited normally, what was the exit code? (upper 8 bits)
+     *   - If it was killed, which signal killed it?
+     *   - Was the child stopped (e.g., by SIGSTOP)?
+     *
+     * WIFEXITED(status)   — true if the child exited normally
+     * WEXITSTATUS(status) — extracts the exit code (the value from return/exit)
+     * WIFSIGNALED(status) — true if killed by a signal
+     * WTERMSIG(status)    — which signal killed it
+     */
 }
 ```
 
@@ -187,6 +264,20 @@ You can install a **signal handler** to run custom code when a signal arrives:
 #include <signal.h>
 
 volatile sig_atomic_t got_sigint = 0;
+/*
+ * volatile   — tells the compiler: "this variable can change at any time from
+ *              outside normal code flow (like a signal handler), so do NOT
+ *              optimize away reads of it." Without volatile, the compiler might
+ *              see the while(!got_sigint) loop and think "got_sigint never
+ *              changes in this loop, so I'll just read it once" — and your
+ *              program would loop forever.
+ *
+ * sig_atomic_t — a type guaranteed to be read and written in a single CPU
+ *              instruction (atomically). This matters because a signal can
+ *              fire between ANY two instructions. If writing to a variable
+ *              took two instructions and a signal fired in between, you'd
+ *              get a half-written, corrupted value.
+ */
 
 void handle_sigint(int sig)
 {
@@ -350,6 +441,30 @@ Key functions:
 - `pthread_join(thread, retval)` --- wait for a thread to finish
 - `pthread_exit(retval)` --- exit current thread (without killing process)
 
+### Thread Lifecycle
+
+A thread goes through a simple set of states during its life:
+
+```
+  Thread Lifecycle:
+
+  Created ──→ Running ──→ Terminated
+                ↑   ↓
+                └── Blocked (waiting for mutex/condition/I/O)
+
+  join() blocks the CALLING thread until the target thread terminates.
+  detach() lets the thread run independently (no join needed, but
+  you can't get its return value).
+```
+
+- `pthread_join(thread, retval)` --- the calling thread **blocks** until `thread`
+  finishes. You get back the return value from the thread function.
+- `pthread_detach(thread)` --- marks the thread as "detached". When it finishes,
+  its resources are automatically cleaned up. You cannot `join` a detached thread.
+
+Use `join` when you need the thread's result or want to wait for it. Use `detach`
+for "fire and forget" background work (like logging).
+
 ---
 
 ## Race Conditions
@@ -424,6 +539,74 @@ Rules:
 
 ---
 
+## Atomic Operations
+
+Mutexes work but they're heavy --- lock, do work, unlock. For simple operations
+like incrementing a counter, there's a lighter approach: **atomic operations**.
+
+Atomic operations are CPU instructions that complete in **one step** --- no other
+thread can interrupt them. The CPU hardware guarantees this. No lock needed.
+
+C11 provides `<stdatomic.h>` for portable atomic operations:
+
+```c
+#include <stdatomic.h>
+
+atomic_int counter = 0;
+
+/* Thread-safe increment — no mutex needed! */
+atomic_fetch_add(&counter, 1);
+
+/* Thread-safe read */
+int value = atomic_load(&counter);
+```
+
+> **Note:** `<stdatomic.h>` is C11, not C99. If you're compiling with `-std=c99`,
+> you can use GCC built-ins instead: `__atomic_fetch_add(&counter, 1, __ATOMIC_SEQ_CST)`.
+> The concepts are the same --- only the spelling differs.
+
+### Compare-And-Swap (CAS)
+
+CAS is the foundation of **lock-free programming**. It atomically checks a value
+and updates it only if it hasn't changed since you last read it:
+
+```
+CAS(location, expected, new_value):
+  atomically:
+    if *location == expected:
+      *location = new_value
+      return true (success)
+    else:
+      return false (someone else changed it)
+```
+
+CAS lets you update a value **only if no one else changed it** since you last
+read it. If it fails, you retry with the new value. Here's the C11 version:
+
+```c
+atomic_int counter = 0;
+
+/* Increment using CAS — retry if another thread changed it */
+int old = atomic_load(&counter);
+while (!atomic_compare_exchange_strong(&counter, &old, old + 1)) {
+    /* old is updated to the current value, so we retry with it */
+}
+```
+
+### When to Use Atomics vs Mutexes
+
+```
+Simple counter/flag  → atomic (faster, no blocking)
+Multiple related updates → mutex (need to keep them consistent)
+Complex data structure → mutex (atomics can't protect multiple fields)
+```
+
+If you need to update a single integer or a single pointer, atomics are the right
+tool. If you need to update two variables that must stay in sync (like a linked
+list's head pointer and its size counter), use a mutex.
+
+---
+
 ## Condition Variables — Waiting for Events
 
 A **condition variable** lets a thread **sleep** until some condition becomes
@@ -458,6 +641,70 @@ void *producer(void *arg)
 Key: `pthread_cond_wait` **atomically** unlocks the mutex and sleeps. When
 signaled, it re-locks the mutex before returning. Always use `while` (not `if`)
 to check the condition --- spurious wakeups can happen.
+
+---
+
+## Producer-Consumer Pattern
+
+The producer-consumer pattern is one of the most common concurrency patterns. One
+thread **produces** data, another **consumes** it, with a shared queue in between:
+
+```
+┌──────────┐     ┌─────────────────┐     ┌──────────┐
+│ Producer │────→│  Message Queue  │────→│ Consumer │
+│ Thread   │     │ (mutex-locked)  │     │ Thread   │
+└──────────┘     └─────────────────┘     └──────────┘
+```
+
+The queue is just an array protected by a mutex + condition variable. The flow
+looks like this:
+
+- **Producer**: lock mutex -> add to queue -> signal condition -> unlock
+- **Consumer**: lock mutex -> while (queue empty) wait on condition -> remove from queue -> unlock
+
+```c
+#define QUEUE_SIZE 16
+
+typedef struct {
+    int items[QUEUE_SIZE];
+    int head, tail, count;
+    pthread_mutex_t lock;
+    pthread_cond_t not_empty;
+    pthread_cond_t not_full;
+} message_queue_t;
+
+void queue_push(message_queue_t *q, int item)
+{
+    pthread_mutex_lock(&q->lock);
+    while (q->count == QUEUE_SIZE) {          /* full? wait */
+        pthread_cond_wait(&q->not_full, &q->lock);
+    }
+    q->items[q->tail] = item;
+    q->tail = (q->tail + 1) % QUEUE_SIZE;    /* circular buffer */
+    q->count++;
+    pthread_cond_signal(&q->not_empty);       /* wake a consumer */
+    pthread_mutex_unlock(&q->lock);
+}
+
+int queue_pop(message_queue_t *q)
+{
+    pthread_mutex_lock(&q->lock);
+    while (q->count == 0) {                   /* empty? wait */
+        pthread_cond_wait(&q->not_empty, &q->lock);
+    }
+    int item = q->items[q->head];
+    q->head = (q->head + 1) % QUEUE_SIZE;
+    q->count--;
+    pthread_cond_signal(&q->not_full);        /* wake a producer */
+    pthread_mutex_unlock(&q->lock);
+    return item;
+}
+```
+
+This pattern appears everywhere: web servers queue incoming requests, databases
+queue transactions, and operating systems queue I/O operations. The earlier
+condition variable example above shows the same idea in a simpler form --- this
+version wraps it into a reusable data structure.
 
 ---
 
@@ -536,8 +783,12 @@ acquiring the resources it needs. Unlike deadlock, the system is making progress
 | Signals            | Async notifications (SIGINT, SIGTERM, SIGKILL)    |
 | Pipes              | One-way byte stream between processes             |
 | Thread             | Lightweight execution within a process            |
+| join/detach        | Wait for thread vs fire-and-forget                |
 | Mutex              | Lock for exclusive access to shared data          |
+| Atomic operations  | CPU-level indivisible ops; lighter than mutex      |
+| CAS                | Update only if unchanged; basis of lock-free code |
 | Condition Variable | Sleep until condition, used with mutex             |
+| Producer-Consumer  | Queue between threads: produce, signal, consume   |
 | Deadlock           | Circular wait on locks --- all threads stuck       |
 
 ---
@@ -550,3 +801,27 @@ acquiring the resources it needs. Unlike deadlock, the system is making progress
 
 2. **parallel_sum.c** --- Sum a large array in parallel using multiple threads.
    Split the work into chunks, each thread sums its chunk, then combine.
+
+---
+
+## Debug Challenge
+
+| File | Description | Bugs |
+|------|-------------|------|
+| `debug_concurrency.c` | Find and fix 4 concurrency bugs (races, deadlocks) | 4 |
+
+These exercises contain **intentionally broken code**. Your job is to find and
+fix each bug. Each function has a comment explaining what it SHOULD do and a
+HINT about the bug class. Run the program — failing tests tell you which
+functions are still broken.
+
+```bash
+make debug    # compile the buggy version
+./exercises/debug_concurrency   # see which tests fail
+# ... fix bugs ...
+# recompile and rerun until all tests pass
+```
+
+---
+
+[← Previous: Module 20 — Graphs](../20-graphs/README.md) | [Next: Module 22 — Building a Text Editor →](../22-building-text-editor/README.md)

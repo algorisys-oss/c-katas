@@ -519,3 +519,26 @@ comments carefully — they tell you exactly what to do.
 
 Take your time. Draw the call stack on paper for each function before running
 it. Recursion clicks once you can see the frames in your head.
+
+---
+
+## Phase 1 Complete — Review & Connect
+
+You've finished the foundations. Let's connect the dots:
+
+- **Module 00**: Computers execute simple instructions on bits
+- **Module 01**: C source → preprocessor → compiler → assembler → linker → executable
+- **Module 02**: Every value is bits — int, float, char are just different interpretations
+- **Module 03**: Control flow directs which instructions execute
+- **Module 04**: Functions organize code; the call stack tracks who called whom
+- **Module 05**: Recursion is functions calling themselves; Big-O measures growth
+
+**You can now**: write programs that take input, compute results, and produce
+output. Every concept from here builds on these foundations.
+
+**What's next**: Phase 2 introduces pointers — the concept that unlocks
+everything from data structures to operating systems.
+
+---
+
+[← Previous: Module 04 — Functions & Program Structure](../04-functions-program-structure/README.md) | [Next: Module 06 — Pointers & Arrays →](../06-pointers-arrays/README.md)

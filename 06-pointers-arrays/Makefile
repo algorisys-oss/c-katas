@@ -50,10 +50,19 @@ test: solutions
 	@echo ""
 	@echo "All solution tests complete."
 
+# --- Debug exercise targets ---
+
+debug: exercises/debug_pointers.c
+	$(CC) $(CFLAGS) exercises/debug_pointers.c -o exercises/debug_pointers
+
+debug-solution: solutions/debug_pointers.c
+	$(CC) $(CFLAGS) solutions/debug_pointers.c -o solutions/debug_pointers
+
 # --- Clean up ---
 
 clean:
 	rm -f pointers strings arrays string_tokenizer
 	rm -f sol-pointers sol-strings sol-arrays sol-string_tokenizer
+	rm -f exercises/debug_pointers solutions/debug_pointers
 
-.PHONY: exercises solutions test clean
+.PHONY: exercises solutions test clean debug debug-solution

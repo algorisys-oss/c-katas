@@ -186,7 +186,60 @@ We must split:
      [5]   [15]  [25 | 30]
 ```
 
+### Pre-emptive Splitting
+
+In the examples above, we inserted into a leaf and then split if it was
+overfull. But there is a smarter approach: **pre-emptive splitting**
+(also called "proactive" or "top-down" splitting).
+
+When walking down the tree to find where to insert, if you encounter a
+**full node** (one with 2t-1 keys), split it **before** descending into
+it. This way, when you finally reach the leaf, you are guaranteed it has
+room — no need to walk back up the tree to fix things.
+
+```
+  Pre-emptive split algorithm (pseudocode):
+
+  insert(tree, key, value):
+      if root is full:
+          create new_root
+          make old root a child of new_root
+          split_child(new_root, 0)    // split the old root
+          root = new_root
+
+      node = root
+      while node is not a leaf:
+          i = find correct child index for key
+          if child[i] is full:
+              split_child(node, i)    // split BEFORE descending
+              if key > node.keys[i]:
+                  i++                 // might need the new right child
+          node = child[i]
+
+      insert key into node (guaranteed to have room)
+```
+
+The benefit: this is a **single-pass, top-down** algorithm. You walk
+from root to leaf exactly once, splitting full nodes as you encounter
+them. No backtracking needed.
+
 ### Why B-Trees for Databases?
+
+#### Disk Page I/O
+
+Disks read and write data in fixed-size blocks called **pages** (usually
+4 KB). You cannot read just 10 bytes from disk — the hardware always
+reads the entire 4 KB page containing those bytes.
+
+A B-Tree node is designed to fit exactly in one page:
+- **Reading a node** = reading one page from disk (one I/O operation)
+- **Writing a node** = writing one page to disk (one I/O operation)
+
+This is why B-Trees minimize tree height — fewer levels means fewer disk
+reads, which means faster lookups. A binary tree with a billion keys
+would be ~30 levels deep (30 disk reads per lookup). A B-Tree with
+order 500 fits hundreds of keys per node and is only 3-4 levels deep
+(3-4 disk reads per lookup).
 
 Each B-Tree node maps perfectly to a **disk page**. A real database might
 use order 100+ so each node holds hundreds of keys and fits in one 4 KB
@@ -277,6 +330,79 @@ future module.
 
 ---
 
+## Database Wire Protocols
+
+So far we've built an in-memory database. Real databases also need a way for
+client programs to **talk** to the database over a network. This is called a
+**wire protocol** — the exact format of bytes that travel between client and
+server over a TCP connection.
+
+### How PostgreSQL's Wire Protocol Works
+
+PostgreSQL uses a binary protocol (version 3). Here's what happens when a
+client connects:
+
+```
+  Wire Protocol = how bytes travel between client and server
+
+  PostgreSQL Protocol v3:
+
+  1. Client sends Startup Message:
+     ┌──────────┬──────────────┬──────────────────────┐
+     │ Length   │ Protocol     │ Key-Value Pairs       │
+     │ (4 bytes)│ (0x00030000) │ user=bob\0database=... │
+     │ big-end  │ = version 3  │ terminated by \0\0    │
+     └──────────┴──────────────┴──────────────────────┘
+
+  2. Server responds with message type + length + payload:
+     ┌──────┬──────────┬───────────┐
+     │ Type │ Length   │ Payload   │
+     │ 'R'  │ (4 bytes)│ auth type │
+     │1 byte│ big-end  │           │
+     └──────┴──────────┴───────────┘
+
+  Common message types:
+    'R' = Authentication request/response
+    'Z' = ReadyForQuery (server is ready for next command)
+    'T' = RowDescription (column names and types)
+    'D' = DataRow (one row of results)
+```
+
+Every message after startup follows the same pattern: one byte for the type,
+four bytes for the length, then the payload. This makes it straightforward to
+parse — you always know how many bytes to read next.
+
+### Redis: A Simpler Approach
+
+Redis uses a text-based protocol called **RESP** (Redis Serialization Protocol)
+that is human-readable and easy to debug:
+
+```
+  Client sends:     *3\r\n$3\r\nSET\r\n$4\r\nname\r\n$5\r\nAlice\r\n
+  Server responds:  +OK\r\n
+
+  Breakdown:
+    *3     = array of 3 elements
+    $3     = next string is 3 bytes
+    SET    = the command
+    $4     = next string is 4 bytes
+    name   = the key
+    $5     = next string is 5 bytes
+    Alice  = the value
+```
+
+You can even test Redis by hand with `telnet` or `nc` — try it!
+
+### Why This Matters
+
+Building a wire protocol is a great exercise in binary serialization, byte
+order handling, and TCP socket programming — it ties together everything
+from Modules 16, 17, and 26. PostgreSQL's binary protocol is more efficient
+but harder to implement. Redis's text-based protocol is simpler and easier
+to debug. Both are valid design choices with different trade-offs.
+
+---
+
 ## Katas
 
 ### Kata 1: `btree.c` — In-Memory B-Tree
@@ -312,3 +438,26 @@ Functions to implement:
 - SQLite file format documentation: https://www.sqlite.org/fileformat.html
 - The original B-Tree paper: Bayer & McCreight, 1972
 - PostgreSQL WAL documentation: https://www.postgresql.org/docs/current/wal-intro.html
+
+### Reading Real Code: SQLite btree.c
+
+SQLite is the most widely deployed database in the world (in every phone,
+browser, and operating system). Its B-tree implementation in `btree.c`
+(~10,000 lines) is a masterclass in systems programming.
+
+What to look for:
+- **Header comments**: The first 200 lines explain the entire page format
+  and B-tree structure. Some of the best documentation in open source.
+- **Page layout**: How data, pointers, and free space are organized within
+  a fixed-size disk page.
+- **Cell format**: How key-value pairs are encoded within B-tree nodes.
+- **Overflow pages**: What happens when a value is too large for one page.
+
+Don't try to read all 10,000 lines — start with the header comments and
+the `sqlite3BtreeInsert()` function.
+
+Source: https://github.com/sqlite/sqlite/blob/master/src/btree.c
+
+---
+
+[← Previous: Module 23: Git Internals](../23-git-internals/README.md) | [Next: Module 25: Parsing & the SQL Engine →](../25-parsing-sql-engine/README.md)

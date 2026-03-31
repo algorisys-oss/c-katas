@@ -339,6 +339,24 @@ Final: swap pivot into position: arr[5]↔arr[7]
 - **In-place**: O(log n) stack space (no extra array)
 - **Great for**: general-purpose sorting (fast in practice due to cache locality)
 
+### Why Quicksort Often Beats Mergesort in Practice
+
+Both are O(n log n), but quicksort is usually faster in practice. Why?
+
+1. **Cache friendliness**: Quicksort partitions in-place, accessing memory
+   sequentially. Mergesort copies to auxiliary arrays, jumping between
+   memory locations — more cache misses.
+
+2. **Less memory**: Quicksort sorts in-place (O(log n) stack space).
+   Mergesort needs O(n) extra memory for the merge step.
+
+3. **Smaller constants**: Quicksort's inner loop is tighter (fewer
+   comparisons and swaps per element on average).
+
+Mergesort has one advantage: guaranteed O(n log n) worst case. Quicksort's
+worst case is O(n^2) — but this almost never happens with random pivot
+selection.
+
 ---
 
 ## Part 4: Stability
@@ -438,3 +456,7 @@ At least 3 comparisons needed to sort 3 elements.
 
 1. **exercises/sorting.c** — Implement all five sorts with comparison counters
 2. **exercises/binary_search.c** — Binary search and its variations
+
+---
+
+[← Previous: Module 13 — Hash Tables](../13-hash-tables/README.md) | [Next: Module 15 — Trees & Heaps →](../15-trees-heaps/README.md)

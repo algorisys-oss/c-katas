@@ -60,6 +60,17 @@ Build a Unix shell that can:
 └─────────────────────────────────────────┘
 ```
 
+### Suggested Build Order
+
+Don't try to build everything at once!
+
+1. **Phase 1**: Read a line, split it into words, print them (parsing only)
+2. **Phase 2**: Execute a single command (fork + exec)
+3. **Phase 3**: Add built-in commands (cd, exit, pwd)
+4. **Phase 4**: Add pipes (cmd1 | cmd2)
+5. **Phase 5**: Add I/O redirection (> file, < file)
+6. **Phase 6**: Add background processes (cmd &)
+
 ### Key Concepts from Earlier Modules
 
 - **Module 06 (Pointers & Arrays)**: argv is an array of char pointers
@@ -297,6 +308,16 @@ Storage Layer:
 └──────────────────────────────────────┘
 ```
 
+### Suggested Build Order
+
+This is the most ambitious project. Build it in layers:
+
+1. **Phase 1**: In-memory table with INSERT and SELECT (no WHERE clause)
+2. **Phase 2**: Add WHERE clause filtering
+3. **Phase 3**: Add persistence (save/load table to/from disk)
+4. **Phase 4**: Replace linear scan with B-Tree index
+5. **Phase 5**: Add CREATE TABLE and DROP TABLE
+
 ### Key Modules
 
 - **Module 07 (Dynamic Memory)**: managing dynamic structures
@@ -378,6 +399,23 @@ Example (Mini Shell):
 - Compare output with /bin/bash for the same commands
 ```
 
+#### Testing Examples by Project
+
+**Mini Shell:**
+- Compare output with `/bin/bash` for 20 commands
+- Test edge cases: empty input, spaces only, very long commands
+- Test pipes: `echo hello | wc -c` should output 6
+
+**HTTP Server:**
+- `curl http://localhost:8080/` should return index.html
+- `curl http://localhost:8080/nonexistent` should return 404
+- Test with `ab` (Apache Bench) for concurrent requests
+
+**Markdown to HTML:**
+- Create test.md files with known output
+- `diff` your output against expected HTML
+- Test nested formatting: `**bold *italic* bold**`
+
 ---
 
 ## The Exercise
@@ -392,3 +430,7 @@ our simple harness (it creates real processes), but the parsing foundation you
 build here is what makes the full shell work.
 
 Good luck. You have earned this.
+
+---
+
+[← Previous: Module 29: Machine Learning in C](../29-machine-learning-in-c/README.md)

@@ -265,6 +265,35 @@ int main(void) {
 (usually 8 bytes on 64-bit), NOT the array size. That's why you always pass
 the size separately.
 
+### Why Arrays Are Blazingly Fast
+
+Arrays aren't just convenient — they're the fastest data structure for
+sequential access. The reason is **cache lines**.
+
+Your CPU doesn't read one byte at a time from RAM. It reads **64 bytes at
+once** (a "cache line") and stores them in a tiny, ultra-fast memory called
+the **L1 cache**. When you access arr[0], the CPU loads arr[0] through
+arr[15] (for 4-byte ints) into cache. When you access arr[1], it's already
+there — a "cache hit" that takes ~1 nanosecond instead of ~100 nanoseconds.
+
+```
+Memory Hierarchy:
+┌─────────────────────────────────────────────────────┐
+│ Register  │  < 1 ns   │  64 bytes    │ In the CPU  │
+│ L1 Cache  │  ~1 ns    │  32-64 KB    │ Per core    │
+│ L2 Cache  │  ~4 ns    │  256 KB      │ Per core    │
+│ L3 Cache  │  ~12 ns   │  8-32 MB     │ Shared      │
+│ RAM       │  ~100 ns  │  8-64 GB     │ Main memory │
+│ SSD       │  ~100 µs  │  256 GB+     │ Storage     │
+└─────────────────────────────────────────────────────┘
+
+L1 cache is ~100x faster than RAM!
+```
+
+This is why iterating an array is so fast — the data is laid out
+contiguously in memory, and the CPU prefetches the next cache line while
+you're processing the current one. This is called "spatial locality."
+
 ---
 
 ## Strings in C
@@ -401,6 +430,26 @@ sizeof(p);      // 8 (just the pointer size on 64-bit)
 
 ---
 
+## Debug Challenge
+
+| File | Description | Bugs |
+|------|-------------|------|
+| `debug_pointers.c` | Find and fix 5 common pointer and array bugs | 5 |
+
+These exercises contain **intentionally broken code**. Your job is to find and
+fix each bug. Each function has a comment explaining what it SHOULD do and a
+HINT about the bug class. Run the program — failing tests tell you which
+functions are still broken.
+
+```bash
+make debug    # compile the buggy version
+./exercises/debug_pointers   # see which tests fail
+# ... fix bugs ...
+# recompile and rerun until all tests pass
+```
+
+---
+
 ## Key Takeaways
 
 - A pointer stores an address; `&` gets the address; `*` follows the address
@@ -409,3 +458,7 @@ sizeof(p);      // 8 (just the pointer size on 64-bit)
 - Pointer arithmetic moves by `sizeof(type)`, not by 1 byte
 - Never dereference NULL, uninitialized, or dangling pointers
 - Never write past the end of an array — there are no guardrails
+
+---
+
+[← Previous: Module 05 — Recursion & Algorithmic Thinking](../05-recursion-algorithmic-thinking/README.md) | [Next: Module 07 — Dynamic Memory →](../07-dynamic-memory/README.md)

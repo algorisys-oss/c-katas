@@ -32,10 +32,19 @@ test: solutions
 	@echo ""
 	@echo "All solution tests complete."
 
+# --- Debug exercise targets ---
+
+debug: exercises/debug_hashtable.c
+	$(CC) $(CFLAGS) exercises/debug_hashtable.c -o exercises/debug_hashtable
+
+debug-solution: solutions/debug_hashtable.c
+	$(CC) $(CFLAGS) solutions/debug_hashtable.c -o solutions/debug_hashtable
+
 # --- Clean up ---
 
 clean:
 	rm -f hash_table word_freq
 	rm -f sol-hash_table sol-word_freq
+	rm -f exercises/debug_hashtable solutions/debug_hashtable
 
-.PHONY: exercises solutions test clean
+.PHONY: exercises solutions test clean debug debug-solution
