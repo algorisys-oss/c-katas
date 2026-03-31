@@ -237,7 +237,7 @@ int main(void)
     /* --- store_init / store_blob --- */
     printf("store_blob:\n");
     {
-        object_store_t store;
+        static object_store_t store;
         store_init(&store);
 
         const char *h = store_blob(&store, "hello", 5);
@@ -248,7 +248,7 @@ int main(void)
     }
 
     {
-        object_store_t store;
+        static object_store_t store;
         store_init(&store);
 
         const char *h1 = store_blob(&store, "hello", 5);
@@ -263,7 +263,7 @@ int main(void)
     }
 
     {
-        object_store_t store;
+        static object_store_t store;
         store_init(&store);
 
         const char *h1 = store_blob(&store, "hello", 5);
@@ -280,7 +280,7 @@ int main(void)
     /* --- store_get --- */
     printf("\nstore_get:\n");
     {
-        object_store_t store;
+        static object_store_t store;
         store_init(&store);
 
         const char *h = store_blob(&store, "hello", 5);
@@ -293,7 +293,7 @@ int main(void)
     }
 
     {
-        object_store_t store;
+        static object_store_t store;
         store_init(&store);
 
         char buf[256];
@@ -308,7 +308,7 @@ int main(void)
     /* --- store_tree_add --- */
     printf("\nstore_tree_add:\n");
     {
-        object_store_t store;
+        static object_store_t store;
         store_init(&store);
 
         const char *blob_h = store_blob(&store, "file content", 12);
@@ -320,7 +320,7 @@ int main(void)
     }
 
     {
-        object_store_t store;
+        static object_store_t store;
         store_init(&store);
 
         const char *h1 = store_blob(&store, "aaa", 3);
@@ -344,7 +344,7 @@ int main(void)
     }
 
     {
-        object_store_t store;
+        static object_store_t store;
         store_init(&store);
 
         const char *h1 = store_blob(&store, "content_a", 9);

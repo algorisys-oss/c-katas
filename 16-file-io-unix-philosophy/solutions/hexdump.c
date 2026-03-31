@@ -24,24 +24,24 @@ int hexdump_format_row(const unsigned char *data, int len, int offset, char *out
     int i;
 
     /* Offset: 8 hex digits, zero-padded */
-    pos += sprintf(out + pos, "%08x  ", offset);
+    pos += snprintf(out + pos, 12, "%08x  ", offset);
 
     /* Hex bytes */
     for (i = 0; i < len; i++) {
-        pos += sprintf(out + pos, "%02x ", data[i]);
+        pos += snprintf(out + pos, 4, "%02x ", data[i]);
     }
 
     /* Pad remaining space if fewer than BYTES_PER_ROW bytes */
     for (i = len; i < BYTES_PER_ROW; i++) {
-        pos += sprintf(out + pos, "   ");
+        pos += snprintf(out + pos, 4, "   ");
     }
 
     /* ASCII column */
-    pos += sprintf(out + pos, " |");
+    pos += snprintf(out + pos, 3, " |");
     for (i = 0; i < len; i++) {
         out[pos++] = is_printable(data[i]) ? (char)data[i] : '.';
     }
-    pos += sprintf(out + pos, "|\n");
+    pos += snprintf(out + pos, 3, "|\n");
 
     return pos;
 }

@@ -155,10 +155,12 @@ void draw_triangle(Image *img, int x0, int y0, int x1, int y1,
 /* ── draw_gradient ───────────────────────────────────────────────── */
 void draw_gradient(Image *img)
 {
+    int dw = img->width > 1 ? img->width - 1 : 1;
+    int dh = img->height > 1 ? img->height - 1 : 1;
     for (int y = 0; y < img->height; y++) {
         for (int x = 0; x < img->width; x++) {
-            unsigned char r = (unsigned char)((x * 255) / (img->width - 1));
-            unsigned char g = (unsigned char)((y * 255) / (img->height - 1));
+            unsigned char r = (unsigned char)((x * 255) / dw);
+            unsigned char g = (unsigned char)((y * 255) / dh);
             image_set_pixel(img, x, y, r, g, 0);
         }
     }

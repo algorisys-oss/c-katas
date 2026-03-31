@@ -42,7 +42,7 @@ void simple_hash(const uint8_t *data, size_t len, uint8_t out_hash[HASH_SIZE])
 void hash_to_hex(const uint8_t hash[HASH_SIZE], char out_hex[HEX_SIZE])
 {
     for (int i = 0; i < HASH_SIZE; i++) {
-        sprintf(out_hex + i * 2, "%02x", hash[i]);
+        snprintf(out_hex + i * 2, 3, "%02x", hash[i]);
     }
     out_hex[40] = '\0';
 }
@@ -50,7 +50,7 @@ void hash_to_hex(const uint8_t hash[HASH_SIZE], char out_hex[HEX_SIZE])
 void git_blob_hash(const char *content, size_t len, char out_hex[HEX_SIZE])
 {
     char header[64];
-    int hdr_len = sprintf(header, "blob %zu", len);
+    int hdr_len = snprintf(header, sizeof(header), "blob %zu", len);
 
     size_t total = (size_t)hdr_len + 1 + len;
     uint8_t *buf = malloc(total);
@@ -231,7 +231,7 @@ int main(void)
     /* --- store_init / store_blob --- */
     printf("store_blob:\n");
     {
-        object_store_t store;
+        static object_store_t store;
         store_init(&store);
 
         const char *h = store_blob(&store, "hello", 5);
@@ -242,7 +242,7 @@ int main(void)
     }
 
     {
-        object_store_t store;
+        static object_store_t store;
         store_init(&store);
 
         const char *h1 = store_blob(&store, "hello", 5);
@@ -257,7 +257,7 @@ int main(void)
     }
 
     {
-        object_store_t store;
+        static object_store_t store;
         store_init(&store);
 
         const char *h1 = store_blob(&store, "hello", 5);
@@ -274,7 +274,7 @@ int main(void)
     /* --- store_get --- */
     printf("\nstore_get:\n");
     {
-        object_store_t store;
+        static object_store_t store;
         store_init(&store);
 
         const char *h = store_blob(&store, "hello", 5);
@@ -287,7 +287,7 @@ int main(void)
     }
 
     {
-        object_store_t store;
+        static object_store_t store;
         store_init(&store);
 
         char buf[256];
@@ -302,7 +302,7 @@ int main(void)
     /* --- store_tree_add --- */
     printf("\nstore_tree_add:\n");
     {
-        object_store_t store;
+        static object_store_t store;
         store_init(&store);
 
         const char *blob_h = store_blob(&store, "file content", 12);
@@ -314,7 +314,7 @@ int main(void)
     }
 
     {
-        object_store_t store;
+        static object_store_t store;
         store_init(&store);
 
         const char *h1 = store_blob(&store, "aaa", 3);
@@ -337,7 +337,7 @@ int main(void)
     }
 
     {
-        object_store_t store;
+        static object_store_t store;
         store_init(&store);
 
         const char *h1 = store_blob(&store, "content_a", 9);

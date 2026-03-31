@@ -38,6 +38,11 @@ Matrix mat_create(int rows, int cols)
     m.rows = rows;
     m.cols = cols;
     m.data = calloc(rows * cols, sizeof(float));
+    if (!m.data) {
+        fprintf(stderr, "mat_create: allocation failed\n");
+        m.rows = 0;
+        m.cols = 0;
+    }
     return m;
 }
 

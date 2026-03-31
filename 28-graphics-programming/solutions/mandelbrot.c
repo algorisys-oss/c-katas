@@ -121,8 +121,10 @@ void render_mandelbrot(Image *img, double x_min, double x_max,
 {
     for (int py = 0; py < img->height; py++) {
         for (int px = 0; px < img->width; px++) {
-            double cr = x_min + ((double)px / (img->width - 1)) * (x_max - x_min);
-            double ci = y_min + ((double)py / (img->height - 1)) * (y_max - y_min);
+            int dw = img->width > 1 ? img->width - 1 : 1;
+            int dh = img->height > 1 ? img->height - 1 : 1;
+            double cr = x_min + ((double)px / dw) * (x_max - x_min);
+            double ci = y_min + ((double)py / dh) * (y_max - y_min);
             int iter = mandelbrot_iterations(cr, ci, max_iter);
             Pixel color = iteration_to_color(iter, max_iter);
             image_set_pixel(img, px, py, color.r, color.g, color.b);

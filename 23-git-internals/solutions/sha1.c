@@ -41,7 +41,7 @@ void simple_hash(const uint8_t *data, size_t len, uint8_t out_hash[HASH_SIZE])
 void hash_to_hex(const uint8_t hash[HASH_SIZE], char out_hex[HEX_SIZE])
 {
     for (int i = 0; i < HASH_SIZE; i++) {
-        sprintf(out_hex + i * 2, "%02x", hash[i]);
+        snprintf(out_hex + i * 2, 3, "%02x", hash[i]);
     }
     out_hex[40] = '\0';
 }
@@ -50,7 +50,7 @@ void git_blob_hash(const char *content, size_t len, char out_hex[HEX_SIZE])
 {
     /* Build "blob <len>\0<content>" */
     char header[64];
-    int hdr_len = sprintf(header, "blob %zu", len);
+    int hdr_len = snprintf(header, sizeof(header), "blob %zu", len);
 
     size_t total = (size_t)hdr_len + 1 + len;
     uint8_t *buf = malloc(total);
