@@ -323,13 +323,107 @@ Use a value stack:
 
 ---
 
+## Monotonic Stacks
+
+A **monotonic stack** is a stack that maintains its elements in sorted order
+(either always increasing or always decreasing from bottom to top). When you
+push a new element, you pop everything that violates the order.
+
+### Why is this useful?
+
+Many problems ask: "for each element, find the nearest element that is
+bigger/smaller." A brute force approach checks every element to the right —
+O(n²). A monotonic stack solves this in O(n).
+
+### The Key Insight
+
+When processing element `i`, the stack holds indices of previous elements
+that are still "waiting" for their answer. If `arr[i]` is greater than the
+top of the stack, then `arr[i]` IS the answer for that top element.
+
+### Step-by-Step: Next Greater Element for [4, 5, 2, 10, 8]
+
+```
+    i=0, val=4:   Stack empty, push 0        Stack: [0]
+                                                     (4)
+
+    i=1, val=5:   5 > arr[0]=4, pop 0
+                   → result[0] = 5
+                   Push 1                    Stack: [1]
+                                                     (5)
+
+    i=2, val=2:   2 < arr[1]=5, just push    Stack: [1, 2]
+                                                     (5  2)
+
+    i=3, val=10:  10 > arr[2]=2, pop 2
+                   → result[2] = 10
+                  10 > arr[1]=5, pop 1
+                   → result[1] = 10
+                  Push 3                     Stack: [3]
+                                                     (10)
+
+    i=4, val=8:   8 < arr[3]=10, just push   Stack: [3, 4]
+                                                     (10 8)
+
+    End: pop remaining → result[3] = -1, result[4] = -1
+
+    Result: [5, 10, 10, -1, -1]
+```
+
+### Why O(n) despite nested loops?
+
+Each element is pushed onto the stack exactly once and popped at most once.
+That's at most 2n operations total across all iterations of the outer loop.
+The while loop doesn't reset — it continues from where the previous
+iteration left off. This is called **amortized O(n)**.
+
+---
+
+## Decode String
+
+The decode string problem uses a stack to handle **nested repetition**:
+`"3[a2[b]]"` means "repeat `a2[b]` three times," and `2[b]` means "repeat
+`b` twice." So: `3[a2[b]]` → `3[abb]` → `abbabbabb`.
+
+### Why a Stack?
+
+Nested brackets create a hierarchy — just like nested parentheses in math.
+Every `[` starts a new level, and `]` closes it. A stack naturally tracks
+"what was I doing before this nesting level?"
+
+This is the same insight from expression evaluation: parentheses create
+nesting, and stacks are the tool for handling nesting.
+
+### Stack Trace for "3[a2[b]]"
+
+```
+    Char   Action                     Stack                  current
+    ────   ────────────────────────   ─────────────────────  ───────
+    '3'    num = 3                    []                     ""
+    '['    push("", 3), reset         [("", 3)]             ""
+    'a'    append to current          [("", 3)]             "a"
+    '2'    num = 2                    [("", 3)]             "a"
+    '['    push("a", 2), reset        [("", 3), ("a", 2)]   ""
+    'b'    append to current          [("", 3), ("a", 2)]   "b"
+    ']'    pop ("a", 2)               [("", 3)]             "abb"
+           current = "a" + "b"*2
+    ']'    pop ("", 3)                []                     "abbabbabb"
+           current = "" + "abb"*3
+
+    Result: "abbabbabb"
+```
+
+---
+
 ## Exercises
 
-| # | File                 | What You'll Build                                |
-|---|----------------------|--------------------------------------------------|
-| 1 | `stack.c`            | Array-based stack + balanced parentheses checker |
-| 2 | `queue.c`            | Circular buffer queue                            |
-| 3 | `expression_eval.c`  | Infix → postfix converter + postfix evaluator    |
+| # | File                 | What You'll Build                                | Tests |
+|---|----------------------|--------------------------------------------------|-------|
+| 1 | `stack.c`            | Array-based stack + balanced parentheses checker | 18    |
+| 2 | `queue.c`            | Circular buffer queue                            | 10    |
+| 3 | `expression_eval.c`  | Infix → postfix converter + postfix evaluator    | 8     |
+| 4 | `monotonic_stack.c`  | Next greater element, daily temps, histogram     | 13    |
+| 5 | `decode_string.c`    | Decode nested encoded strings using a stack      | 6     |
 
 Build with `make exercises` and test solutions with `make test`.
 

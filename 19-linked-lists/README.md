@@ -449,12 +449,66 @@ the Big-O suggests a linked list would be "better."
 
 ---
 
+## The Intersection Problem (Y-Shape)
+
+Two singly linked lists can **merge** into one — they share a common tail. This
+creates a Y shape:
+
+```
+  List A:  1 -> 2 -> 3 \
+                         -> 6 -> 7 -> NULL
+  List B:       4 -> 5 /
+```
+
+Node 6 is the **intersection** — it is literally the **same node in memory**,
+not just a node with the same value. Both lists' `next` pointers converge at
+this point, and from there they share every subsequent node.
+
+### Why Pointer Comparison Matters
+
+You might think: "just compare values." But two nodes can hold the same integer
+and still be completely different allocations at different addresses. Intersection
+means the **same address** — use `==` on pointers, not on data values.
+
+### The Length-Difference Algorithm
+
+The elegant O(n+m) solution uses no extra memory:
+
+1. **Get the length** of both lists by walking each one to NULL.
+2. **Compute the difference**: `diff = |len_a - len_b|`.
+3. **Advance the longer list** by `diff` steps. Now both pointers are the same
+   distance from the end.
+4. **Walk both pointers forward** one step at a time. The first time they point
+   to the **same node**, that is the intersection.
+
+Step by step:
+
+```
+  A:  1 -> 2 -> 3 -> 6 -> 7 -> NULL    (length 5)
+  B:       4 -> 5 -> 6 -> 7 -> NULL    (length 4)
+
+  diff = 5 - 4 = 1
+  Advance A by 1:  pA starts at node 2
+
+  Step 1:  pA = 2,  pB = 4   (different nodes)
+  Step 2:  pA = 3,  pB = 5   (different nodes)
+  Step 3:  pA = 6,  pB = 6   (SAME NODE — found it!)
+```
+
+If you reach NULL without a match, the lists don't intersect.
+
+**Time**: O(n + m) — two passes: one to measure, one to find.
+**Space**: O(1) — only a few pointer variables.
+
+---
+
 ## Exercises
 
 | # | File | Description |
 |---|------|-------------|
 | 1 | `exercises/linked_list.c` | Singly linked list library — 18 tests |
 | 2 | `exercises/lru_cache.c` | LRU cache with doubly linked list — 10 tests |
+| 3 | `exercises/list_intersection.c` | Y-shape intersection problem — 8 tests |
 
 ---
 

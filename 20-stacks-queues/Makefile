@@ -3,7 +3,7 @@ CFLAGS = -Wall -Wextra -pedantic -std=c99
 
 # --- Exercise targets ---
 
-exercises: stack queue expression_eval
+exercises: stack queue expression_eval monotonic_stack decode_string
 
 stack: exercises/stack.c
 	$(CC) $(CFLAGS) -o stack exercises/stack.c
@@ -14,9 +14,15 @@ queue: exercises/queue.c
 expression_eval: exercises/expression_eval.c
 	$(CC) $(CFLAGS) -o expression_eval exercises/expression_eval.c
 
+monotonic_stack: exercises/monotonic_stack.c
+	$(CC) $(CFLAGS) -o monotonic_stack exercises/monotonic_stack.c
+
+decode_string: exercises/decode_string.c
+	$(CC) $(CFLAGS) -o decode_string exercises/decode_string.c
+
 # --- Solution targets (prefix with sol-) ---
 
-solutions: sol-stack sol-queue sol-expression_eval
+solutions: sol-stack sol-queue sol-expression_eval sol-monotonic_stack sol-decode_string
 
 sol-stack: solutions/stack.c
 	$(CC) $(CFLAGS) -o sol-stack solutions/stack.c
@@ -26,6 +32,12 @@ sol-queue: solutions/queue.c
 
 sol-expression_eval: solutions/expression_eval.c
 	$(CC) $(CFLAGS) -o sol-expression_eval solutions/expression_eval.c
+
+sol-monotonic_stack: solutions/monotonic_stack.c
+	$(CC) $(CFLAGS) -o sol-monotonic_stack solutions/monotonic_stack.c
+
+sol-decode_string: solutions/decode_string.c
+	$(CC) $(CFLAGS) -o sol-decode_string solutions/decode_string.c
 
 # --- Test: build and run solutions to verify correctness ---
 
@@ -39,12 +51,18 @@ test: solutions
 	@echo "--- Expression Evaluator ---"
 	./sol-expression_eval
 	@echo ""
+	@echo "--- Monotonic Stack ---"
+	./sol-monotonic_stack
+	@echo ""
+	@echo "--- Decode String ---"
+	./sol-decode_string
+	@echo ""
 	@echo "All solution tests complete."
 
 # --- Clean up ---
 
 clean:
-	rm -f stack queue expression_eval
-	rm -f sol-stack sol-queue sol-expression_eval
+	rm -f stack queue expression_eval monotonic_stack decode_string
+	rm -f sol-stack sol-queue sol-expression_eval sol-monotonic_stack sol-decode_string
 
 .PHONY: exercises solutions test clean

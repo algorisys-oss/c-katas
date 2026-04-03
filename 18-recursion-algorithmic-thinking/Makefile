@@ -3,7 +3,7 @@ CFLAGS = -Wall -Wextra -pedantic -std=c99
 
 # --- Exercise targets ---
 
-exercises: factorial fibonacci power hanoi recursive_strings
+exercises: factorial fibonacci power hanoi recursive_strings memoization
 
 factorial: exercises/factorial.c
 	$(CC) $(CFLAGS) -o factorial exercises/factorial.c
@@ -20,9 +20,12 @@ hanoi: exercises/hanoi.c
 recursive_strings: exercises/recursive_strings.c
 	$(CC) $(CFLAGS) -o recursive_strings exercises/recursive_strings.c
 
+memoization: exercises/memoization.c
+	$(CC) $(CFLAGS) -o memoization exercises/memoization.c
+
 # --- Solution targets (prefix with sol-) ---
 
-solutions: sol-factorial sol-fibonacci sol-power sol-hanoi sol-recursive_strings
+solutions: sol-factorial sol-fibonacci sol-power sol-hanoi sol-recursive_strings sol-memoization
 
 sol-factorial: solutions/factorial.c
 	$(CC) $(CFLAGS) -o sol-factorial solutions/factorial.c
@@ -38,6 +41,9 @@ sol-hanoi: solutions/hanoi.c
 
 sol-recursive_strings: solutions/recursive_strings.c
 	$(CC) $(CFLAGS) -o sol-recursive_strings solutions/recursive_strings.c
+
+sol-memoization: solutions/memoization.c
+	$(CC) $(CFLAGS) -o sol-memoization solutions/memoization.c
 
 # --- Test: build and run solutions to verify correctness ---
 
@@ -57,12 +63,15 @@ test: solutions
 	@echo "--- Recursive Strings & Arrays ---"
 	./sol-recursive_strings
 	@echo ""
+	@echo "--- Memoization & Dynamic Programming ---"
+	./sol-memoization
+	@echo ""
 	@echo "All solution tests complete."
 
 # --- Clean up ---
 
 clean:
-	rm -f factorial fibonacci power hanoi recursive_strings
-	rm -f sol-factorial sol-fibonacci sol-power sol-hanoi sol-recursive_strings
+	rm -f factorial fibonacci power hanoi recursive_strings memoization
+	rm -f sol-factorial sol-fibonacci sol-power sol-hanoi sol-recursive_strings sol-memoization
 
 .PHONY: exercises solutions test clean

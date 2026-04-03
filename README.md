@@ -1,6 +1,6 @@
 # C Katas — Systems Programming from First Principles
 
-**30 modules. 700+ tests. From "what is a computer" to building a database, ray tracer, and neural network — all in C.**
+**30 modules. 900+ tests. From "what is a computer" to building a database, ray tracer, and neural network — all in C.**
 
 A ground-up C99 systems programming curriculum designed for absolute beginners who want deep, intuitive understanding of how computers actually work. No prior programming experience required.
 
@@ -23,6 +23,8 @@ This tutorial doesn't just teach C syntax. It teaches **systems thinking** — t
 | SQL engine | 25 | Tokenizer, recursive descent parser, evaluator |
 | HTTP parser | 26 | TCP sockets, protocol parsing |
 | Ray tracer | 28c | 3D vector math, Phong lighting, reflections |
+| LRU cache | 13 | Hash tables + doubly linked lists, O(1) get/put |
+| Segment tree | 15 | Range queries, point updates, prefix sums |
 | Neural network | 29 | Matrix math, backpropagation, gradient descent |
 
 ## Prerequisites
@@ -97,7 +99,7 @@ gcc -Wall -Wextra -pedantic -std=c99
 | 02 | Types, Variables & Operators | int/float/char, two's complement, IEEE 754, bitwise | 3 |
 | 03 | Control Flow | if/else, loops, flowcharts, De Morgan's laws | 4 |
 | 04 | Functions & Program Structure | Call stack, scope, headers, pass-by-value | 4 |
-| 05 | Recursion & Algorithmic Thinking | Base cases, Big-O notation, divide and conquer | 5 |
+| 05 | Recursion & Algorithmic Thinking | Base cases, Big-O, divide and conquer, memoization, DP | 6 |
 
 ### Phase 2: Pointers & Memory (Modules 06–08)
 | # | Module | Key Concepts | Exercises |
@@ -111,11 +113,11 @@ gcc -Wall -Wextra -pedantic -std=c99
 |---|--------|-------------|-----------|
 | 09 | Structs, Unions & Compound Types | Memory layout, padding, tagged unions, opaque types | 3 |
 | 10 | Function Pointers & Callbacks | qsort, dispatch tables, polymorphism in C | 3 |
-| 11 | Linked Lists | Singly/doubly linked, LRU cache | 3 |
-| 12 | Stacks & Queues | LIFO/FIFO, circular buffer, expression evaluation | 3 |
-| 13 | Hash Tables | Hash functions, collisions, open addressing, chaining | 3 |
-| 14 | Sorting & Searching | Binary search, quicksort, mergesort, stability | 2 |
-| 15 | Trees & Heaps | BST, AVL rotations, binary heap, heapsort | 3 |
+| 11 | Linked Lists | Singly/doubly linked, Y-shape intersection | 4 |
+| 12 | Stacks & Queues | LIFO/FIFO, circular buffer, expression eval, monotonic stack, decode string | 5 |
+| 13 | Hash Tables | Hash functions, collisions, open addressing, two sum, LRU cache | 5 |
+| 14 | Sorting & Searching | Binary search, quicksort, mergesort, two pointers, sliding window, intervals | 7 |
+| 15 | Trees & Heaps | BST, AVL, heap, prefix sums, segment tree, Fenwick tree | 7 |
 
 ### Phase 4: Systems Building Blocks (Modules 16–21)
 | # | Module | Key Concepts | Exercises |
@@ -124,7 +126,7 @@ gcc -Wall -Wextra -pedantic -std=c99
 | 17 | Text, Unicode & Encoding | ASCII, UTF-8, encoding/decoding, validation | 3 |
 | 18 | Date & Time | Unix epoch, leap years, timezones, formatting | 1 |
 | 19 | Preprocessor & Build Systems | Macros, conditional compilation, Makefiles | 1 |
-| 20 | Graphs | BFS, DFS, Dijkstra, topological sort, maze solving | 3 |
+| 20 | Graphs | BFS, DFS, Dijkstra, topological sort, islands, rotten oranges | 4 |
 | 21 | Processes & Concurrency | fork/exec, threads, mutexes, atomics, producer-consumer | 3 |
 
 ### Phase 5: Building Real Systems (Modules 22–28c)
@@ -145,6 +147,36 @@ gcc -Wall -Wextra -pedantic -std=c99
 |---|--------|-------------|-----------|
 | 29 | Machine Learning in C | Linear algebra, gradient descent, backpropagation | 2 |
 | 30 | Capstone Project | Mini shell, HTTP server, or SQL database | 1 |
+
+## Estimated Completion Time
+
+Total estimated effort: **~500 hours** (reading + coding + debugging).
+
+Time splits roughly as: **40% reading concepts** | **35% writing code** | **25% debugging & tooling**
+
+### By Weekly Commitment
+
+| Hours/Week | Total Duration | Pace |
+|:----------:|:--------------:|------|
+| 4 hrs | ~2.5 years | Relaxed — good alongside school |
+| 6 hrs | ~1.5–2 years | Steady — 1 module every ~10 days |
+| 8 hrs | ~1–1.5 years | Focused — roughly 1 module/week |
+| 10 hrs | ~1 year | Intensive — fast but sustainable |
+| 12 hrs | ~10 months | Sprint — summer/gap-year pace |
+
+### By Phase
+
+| Phase | Modules | Est. Hours | 4 hr/wk | 6 hr/wk | 8 hr/wk | 10 hr/wk | 12 hr/wk |
+|-------|---------|:----------:|:-------:|:-------:|:-------:|:--------:|:--------:|
+| 1. Foundations | 00–05 | ~70 hrs | 18 wks | 12 wks | 9 wks | 7 wks | 6 wks |
+| 2. Pointers & Memory | 06–08 | ~45 hrs | 11 wks | 8 wks | 6 wks | 5 wks | 4 wks |
+| 3. Data Structures | 09–15 | ~90 hrs | 23 wks | 15 wks | 11 wks | 9 wks | 8 wks |
+| 4. Systems Building Blocks | 16–21 | ~80 hrs | 20 wks | 13 wks | 10 wks | 8 wks | 7 wks |
+| 5. Real Systems | 22–28c | ~170 hrs | 43 wks | 28 wks | 21 wks | 17 wks | 14 wks |
+| 6. Advanced & Capstone | 29–30 | ~45 hrs | 11 wks | 8 wks | 6 wks | 5 wks | 4 wks |
+| **Total** | **33 modules** | **~500 hrs** | **~126 wks** | **~84 wks** | **~63 wks** | **~51 wks** | **~43 wks** |
+
+> **Note**: Build-heavy modules (text editor, database, SQL engine, ray tracer) take 2–3x longer than concept modules. Phase 5 is the heaviest — don't rush it. Estimates include time for reading, re-reading, and debugging with valgrind/GDB.
 
 ## Teaching Approach
 

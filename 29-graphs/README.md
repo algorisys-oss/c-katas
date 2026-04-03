@@ -433,13 +433,109 @@ graph algorithms to solve them:
 
 ---
 
+## Grids as Graphs
+
+Many classic problems are really graph problems hiding inside a 2D grid. The
+trick is to see it:
+
+- **Cell = node**. Each `(row, col)` position is a vertex.
+- **Adjacent cells = edges**. Moving up/down/left/right gives up to 4 edges.
+- **No diagonals** (unless the problem says otherwise).
+
+```
+  A 4x5 grid is a graph with 20 nodes and up to 62 edges:
+
+  (0,0)---(0,1)---(0,2)---(0,3)---(0,4)
+    |        |        |        |        |
+  (1,0)---(1,1)---(1,2)---(1,3)---(1,4)
+    |        |        |        |        |
+  (2,0)---(2,1)---(2,2)---(2,3)---(2,4)
+    |        |        |        |        |
+  (3,0)---(3,1)---(3,2)---(3,3)---(3,4)
+
+  Corner cells have 2 neighbors, edge cells have 3, interior cells have 4.
+```
+
+The direction trick: encode the 4 moves as arrays so you can loop over them:
+
+```c
+int dr[] = {-1, 1, 0, 0};   /* up, down, same, same */
+int dc[] = {0, 0, -1, 1};   /* same, same, left, right */
+
+for (int d = 0; d < 4; d++) {
+    int nr = r + dr[d];
+    int nc = c + dc[d];
+    if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+        /* (nr, nc) is a valid neighbor of (r, c) */
+    }
+}
+```
+
+### DFS on Grids: Flood Fill / Islands
+
+To count connected components (islands) on a grid:
+
+1. Scan every cell left-to-right, top-to-bottom
+2. When you find an unvisited land cell, that's a new island --- increment count
+3. DFS from that cell to mark all connected land cells as visited
+4. Continue scanning
+
+```
+  Grid:              After island 1:      After island 2:      After island 3:
+  1 1 0 0 0          . . 0 0 0            . . 0 0 0            . . 0 0 0
+  1 1 0 0 0   DFS    . . 0 0 0    DFS     . . 0 0 0    DFS     . . 0 0 0
+  0 0 1 0 0   --->   0 0 1 0 0    --->    0 0 . 0 0    --->    0 0 . 0 0
+  0 0 0 1 1          0 0 0 1 1            0 0 0 1 1            0 0 0 . .
+  count=1            count=1              count=2              count=3
+```
+
+Why DFS works: it fully explores one connected component before moving on.
+Time complexity: O(rows x cols) --- every cell is visited at most once.
+
+### Multi-Source BFS: Rotten Oranges
+
+Regular BFS starts from **one** source node. Multi-source BFS starts from
+**all** sources simultaneously by adding them all to the queue before the loop
+begins.
+
+Each "level" of BFS (one pass through all current queue entries) represents
+one time step. This gives the minimum time for the wavefront to reach every
+reachable cell.
+
+```
+  Rotten oranges spread simultaneously from all rotten cells:
+
+  Minute 0:          Minute 1:          Minute 2:          Minute 3:
+  2 1 1 1 2          2 2 1 1 2          2 2 2 2 2          2 2 2 2 2
+  1 1 1 1 1          2 1 1 1 2          2 2 1 2 2          2 2 2 2 2
+  ^       ^          ^^^^^^^^           ^^^^^^^^^^
+  sources             wave 1              wave 2             wave 3
+
+  Queue at start: [(0,0), (0,4)]   ← all initial rotten cells
+  After wave 1:   [(0,1), (1,0), (0,3), (1,4)]
+  After wave 2:   [(0,2), (1,1), (1,3)]
+  After wave 3:   [(1,2)]          ← last fresh orange rotted, answer = 3
+```
+
+### Shortest Path on a Grid
+
+BFS on an unweighted graph always finds the shortest path (fewest edges).
+On a grid, this means the fewest steps from one cell to another.
+
+Track distance with a `dist[][]` array initialized to -1. When BFS first
+reaches a cell, `dist[nr][nc] = dist[r][c] + 1`. The first time you reach the
+destination is guaranteed to be the shortest path.
+
+---
+
 ## Exercises
 
-| File            | Concepts                                | Tests |
-|-----------------|------------------------------------------|-------|
-| `graph.c`       | Adjacency list, BFS, DFS, shortest path  | 15    |
-| `maze.c`        | BFS maze solver, path reconstruction     | 8     |
-| `topo_sort.c`   | Topological sort (Kahn's), cycle detect  | 10    |
+| File               | Concepts                                    | Tests |
+|--------------------|----------------------------------------------|-------|
+| `graph.c`          | Adjacency list, BFS, DFS, shortest path      | 15    |
+| `maze.c`           | BFS maze solver, path reconstruction         | 8     |
+| `topo_sort.c`      | Topological sort (Kahn's), cycle detect      | 10    |
+| `grid_problems.c`  | Islands (DFS), rotten oranges (multi-source BFS), grid shortest path | 14 |
 
 Build and test:
 ```bash

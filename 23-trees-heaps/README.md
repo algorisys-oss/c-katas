@@ -587,6 +587,300 @@ Real-world uses:
 
 ---
 
+## Prefix Sums
+
+### The Problem
+
+You have an array of numbers and someone keeps asking: "What is the sum from
+index 2 to index 7?" "What about index 0 to 3?" Each query scans the range —
+O(n) per query. If you answer 1000 queries on an array of 10,000 elements,
+that's 10 million operations.
+
+### The Insight: Precompute Running Totals
+
+Build a **prefix sum** array where `prefix[i]` = sum of the first `i` elements:
+
+```
+  Original:    a[] = [3,  1,  4,  1,  5]
+  Prefix:  prefix[] = [0,  3,  4,  8,  9, 14]
+                       ^                    ^
+                  empty sum           sum of all 5
+
+  prefix[0] = 0                  (no elements)
+  prefix[1] = 3                  (just a[0])
+  prefix[2] = 3 + 1 = 4         (a[0] + a[1])
+  prefix[3] = 3 + 1 + 4 = 8     (a[0] + a[1] + a[2])
+  prefix[4] = 3 + 1 + 4 + 1 = 9
+  prefix[5] = 3 + 1 + 4 + 1 + 5 = 14
+```
+
+Now any range sum is a single subtraction:
+
+```
+  sum of a[l..r] = prefix[r+1] - prefix[l]
+
+  Example: sum of a[1..3] = prefix[4] - prefix[1] = 9 - 3 = 6
+
+  Visually:
+    index:   0    1    2    3    4
+    value: [ 3 ][ 1 ][ 4 ][ 1 ][ 5 ]
+                 |<-- sum = 6 -->|
+                 l=1             r=3
+
+    prefix[4] covers a[0..3] = 9
+  - prefix[1] covers a[0..0] = 3
+    ──────────────────────────────
+    result = a[1..3]         = 6
+```
+
+### Complexity
+
+| Operation      | Naive   | Prefix Sums |
+|----------------|---------|-------------|
+| Build          | —       | O(n)        |
+| Range query    | O(n)    | O(1)        |
+| Update element | O(1)    | O(n) !!     |
+
+The limitation: if you change an element, you must rebuild the entire prefix
+array — O(n). This motivates segment trees and Fenwick trees.
+
+---
+
+## Bit Manipulation
+
+### Review: Binary Numbers and Two's Complement
+
+You learned binary in Module 00 and two's complement in Module 02. Quick recap:
+
+```
+  Decimal 12 in binary:  0000 1100
+  Two's complement of -12:
+    Step 1: Flip all bits:  1111 0011
+    Step 2: Add 1:          1111 0100
+```
+
+### Core Bit Operations
+
+```
+  AND (&):  1 & 1 = 1, all others = 0    (both must be 1)
+  OR  (|):  0 | 0 = 0, all others = 1    (either can be 1)
+  XOR (^):  same = 0, different = 1       (must differ)
+  NOT (~):  flip every bit
+  <<  :     shift left  (multiply by 2)
+  >>  :     shift right (divide by 2)
+```
+
+### The Lowest Set Bit Trick: n & (-n)
+
+This is THE key operation for Fenwick trees. It extracts the lowest 1-bit:
+
+```
+     n  = 12 = 0000 1100
+    -n  =      1111 0100    (flip all bits, add 1)
+   n&-n =      0000 0100 = 4
+
+  Why? Flipping turns every bit below the lowest 1 into 1s, and the
+  lowest 1 into 0. Adding 1 ripples through those 1s, setting exactly
+  the lowest 1 back. Everything above it cancels in the AND.
+
+  Another example:
+     n  = 10 = 1010
+    -n  =      0110
+   n&-n =      0010 = 2
+```
+
+### Brian Kernighan's Trick: n & (n-1) Clears the Lowest Set Bit
+
+```
+  n   = 13 = 1101
+  n-1 = 12 = 1100    (borrow flips lowest 1 and everything below)
+  n & (n-1) = 1100 = 12
+
+  Next iteration:
+  n   = 12 = 1100
+  n-1 = 11 = 1011
+  n & (n-1) = 1000 = 8
+
+  Next:
+  n   = 8  = 1000
+  n-1 = 7  = 0111
+  n & (n-1) = 0000 = 0    → done after 3 iterations = 3 set bits
+```
+
+This counts set bits in O(k) where k is the number of 1-bits — faster than
+checking all 32 bits.
+
+### XOR Properties
+
+```
+  XOR Truth Table:
+    a | b | a^b
+   ---+---+-----
+    0 | 0 |  0
+    0 | 1 |  1
+    1 | 0 |  1
+    1 | 1 |  0
+
+  Key properties:
+    a ^ a = 0    (anything XOR itself is zero)
+    a ^ 0 = a    (XOR with zero gives itself)
+    a ^ b ^ a = b  (XOR is its own inverse)
+```
+
+These properties let you swap two values without a temporary variable and
+are the basis for many cryptographic operations.
+
+---
+
+## Segment Tree
+
+### The Problem: Range Queries WITH Updates
+
+Prefix sums give O(1) range queries but O(n) updates. What if we need both
+to be fast? A **segment tree** gives O(log n) for both.
+
+### The Idea
+
+Build a binary tree where each node stores the answer for a **range** of the
+array. The root covers the whole array. Each node's children split the range
+in half.
+
+For array `[1, 3, 5, 7, 9, 11]`:
+
+```
+                      [36]                   range [0,5] (sum of all)
+                    /      \
+                [9]          [27]            [0,2] and [3,5]
+               /   \        /    \
+            [4]    [5]   [16]   [11]         [0,1],[2,2],[3,4],[5,5]
+            / \          / \
+          [1] [3]     [7] [9]               leaves = original values
+```
+
+### Storage: Array-Based (Like Heaps)
+
+Node `i` has children at `2*i+1` and `2*i+2`. An array of size `4*n` is
+always sufficient.
+
+### Query: Which Nodes to Visit?
+
+For range `[1,4]` (sum = 3 + 5 + 7 + 9 = 24):
+
+```
+  At each node, ask: does my range overlap [1,4]?
+
+  [36] range [0,5] — partial overlap → recurse both children
+    ├─ [9] range [0,2] — partial overlap → recurse
+    │   ├─ [4] range [0,1] — partial → recurse
+    │   │   ├─ [1] range [0,0] — no overlap → return 0
+    │   │   └─ [3] range [1,1] — complete overlap → return 3
+    │   └─ [5] range [2,2] — complete overlap → return 5
+    └─ [27] range [3,5] — partial overlap → recurse
+        ├─ [16] range [3,4] — complete overlap → return 16
+        └─ [11] range [5,5] — no overlap → return 0
+
+  Result: 0 + 3 + 5 + 16 + 0 = 24
+```
+
+### Update: Leaf to Root
+
+To change index 2 from 5 to 10, walk from the leaf to the root:
+
+```
+  Leaf [5] → [10]
+  Parent [9] → [14]  (4 + 10)
+  Grandparent [36] → [41]  (14 + 27)
+```
+
+### Complexity Comparison
+
+| Operation      | Naive   | Prefix Sums | Segment Tree |
+|----------------|---------|-------------|--------------|
+| Build          | —       | O(n)        | O(n)         |
+| Range query    | O(n)    | O(1)        | O(log n)     |
+| Point update   | O(1)    | O(n)        | O(log n)     |
+
+Segment trees trade slightly slower queries for much faster updates.
+
+---
+
+## Fenwick Tree (Binary Indexed Tree)
+
+### The Elegant Alternative
+
+A Fenwick tree (also called a Binary Indexed Tree or BIT) achieves the same
+O(log n) query and update as a segment tree, but with simpler code, less
+memory, and better cache performance.
+
+### The Trick: Lowest Set Bit Determines Range
+
+Each index `i` stores a partial sum covering a range whose **length equals
+the lowest set bit of i**:
+
+```
+  Index (binary)  Responsible for range    # elements (= lowest set bit)
+  1  (0001)       [1, 1]                   1
+  2  (0010)       [1, 2]                   2
+  3  (0011)       [3, 3]                   1
+  4  (0100)       [1, 4]                   4
+  5  (0101)       [5, 5]                   1
+  6  (0110)       [5, 6]                   2
+  7  (0111)       [7, 7]                   1
+  8  (1000)       [1, 8]                   8
+```
+
+### Why 1-Indexed?
+
+The bit trick `i & (-i)` gives 0 when `i = 0`, which would cause an infinite
+loop. Starting at index 1 avoids this.
+
+### Query: Strip the Lowest Set Bit
+
+To compute prefix sum [1..7]:
+
+```
+  i = 7 (0111): sum += tree[7]   → i -= 0001 → i = 6
+  i = 6 (0110): sum += tree[6]   → i -= 0010 → i = 4
+  i = 4 (0100): sum += tree[4]   → i -= 0100 → i = 0
+  Done! sum = tree[7] + tree[6] + tree[4]
+
+  tree[7] covers [7,7], tree[6] covers [5,6], tree[4] covers [1,4]
+  Together: [1,7] — exactly what we wanted.
+```
+
+### Update: Add the Lowest Set Bit
+
+To update index 3 (add a delta):
+
+```
+  i = 3 (0011): tree[3] += delta → i += 0001 → i = 4
+  i = 4 (0100): tree[4] += delta → i += 0100 → i = 8
+  i = 8 (1000): tree[8] += delta → i += 1000 → i = 16
+  i > n, done. Updated tree[3], tree[4], tree[8] — all nodes whose
+  range includes index 3.
+```
+
+### When to Use Which?
+
+```
+  ┌──────────────────┬──────────────┬──────────────┐
+  │                  │ Segment Tree │ Fenwick Tree │
+  ├──────────────────┼──────────────┼──────────────┤
+  │ Point update     │ O(log n)     │ O(log n)     │
+  │ Range query      │ O(log n)     │ O(log n)     │
+  │ Space            │ 4n           │ n + 1        │
+  │ Code complexity  │ ~40 lines    │ ~10 lines    │
+  │ Supports min/max │ Yes          │ No           │
+  │ Lazy propagation │ Yes          │ No           │
+  │ Cache friendly   │ Less         │ More         │
+  └──────────────────┴──────────────┴──────────────┘
+
+  Use Fenwick when: you need prefix-sum-style queries (sum, XOR, count)
+  Use Segment tree when: you need min, max, GCD, or range updates
+```
+
+---
+
 ## Exercises
 
 1. **`bst.c`** — Implement a binary search tree with insert, search, delete,
@@ -594,6 +888,19 @@ Real-world uses:
 
 2. **`heap.c`** — Implement a min-heap with insert, extract-min, peek, and
    heap sort. ~14 tests.
+
+3. **`prefix_sums.c`** — Build prefix sums, answer range queries in O(1),
+   count evens in a range, find equilibrium index, count subarrays with
+   target sum. ~15 tests.
+
+4. **`bit_tricks.c`** — Lowest set bit, popcount, power-of-two check, XOR
+   swap, next power of two. Foundation for Fenwick trees. ~17 tests.
+
+5. **`segment_tree.c`** — Build, query, and update a segment tree for range
+   sum and range minimum queries. ~14 tests.
+
+6. **`fenwick_tree.c`** — Build, update, query, range query, and point query
+   on a Fenwick tree (Binary Indexed Tree). ~14 tests.
 
 ---
 

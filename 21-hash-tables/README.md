@@ -313,6 +313,129 @@ This tradeoff appears everywhere in computing:
 
 ---
 
+## Two Sum — Why Data Structures Matter
+
+The Two Sum problem: given an array and a target, find two elements that
+add up to the target. It's simple to state, but it beautifully demonstrates
+why choosing the right data structure matters.
+
+### Three Approaches, Same Problem
+
+```
+    ┌──────────────────┬──────────┬──────────┬─────────────────────┐
+    │ Approach          │ Time     │ Space    │ Requirement         │
+    ├──────────────────┼──────────┼──────────┼─────────────────────┤
+    │ Brute force       │ O(n²)    │ O(1)     │ None                │
+    │ Hash table        │ O(n)     │ O(n)     │ None                │
+    │ Two pointers      │ O(n)     │ O(1)     │ Array must be sorted│
+    └──────────────────┴──────────┴──────────┴─────────────────────┘
+```
+
+### Brute Force: Check Every Pair — O(n²)
+
+The obvious approach: for each element, check every other element.
+With n elements, that's roughly n²/2 comparisons.
+
+### Hash Table: The Complement Trick — O(n)
+
+The insight: if you're looking for two numbers that sum to `target`, then
+for any number `x`, you need `target - x` (the **complement**). If you've
+already seen the complement, you're done.
+
+```
+    Array: [2, 7, 11, 15], target = 9
+
+    i=0: arr[0]=2, complement = 9-2 = 7.  Hash table: {}. Not found. Store 2→0.
+    i=1: arr[1]=7, complement = 9-7 = 2.  Hash table: {2:0}. Found! Return (0,1).
+```
+
+One pass, O(1) per lookup — O(n) total. But uses O(n) extra space for the table.
+
+### Two Pointers: O(n) Time, O(1) Space — But Needs Sorted Input
+
+If the array is sorted, use two pointers: one at the start, one at the end.
+If their sum is too small, move the left pointer right. Too big, move the
+right pointer left.
+
+```
+    Sorted array: [1, 3, 5, 7, 9], target = 12
+
+    left=0, right=4: 1+9=10 < 12, move left →
+    left=1, right=4: 3+9=12 = 12 ✓ Found! Return (1,4)
+```
+
+---
+
+## LRU Cache — Hash Table Meets Linked List
+
+### What is Caching?
+
+You already use caches every day. Your browser caches images so it doesn't
+download them again. Your CPU caches frequently used memory locations in L1/L2
+cache (thousands of times faster than main RAM). A cache is just **fast storage
+for recently/frequently used data**.
+
+### The Eviction Problem
+
+Caches have limited space. When full, something must go. **LRU** (Least
+Recently Used) evicts the item that hasn't been touched for the longest time.
+The bet: if you haven't used it recently, you probably won't need it soon.
+
+### Why Two Data Structures?
+
+We need two operations to be fast:
+- **Find an item by key**: hash table gives O(1)
+- **Track usage order** (move to front on access, remove from back on evict):
+  doubly linked list gives O(1)
+
+Neither alone is enough. A hash table can't track order. A linked list
+can't find items by key in O(1). Together, they're perfect.
+
+### The Architecture
+
+```
+    Hash Table                     Doubly Linked List
+    (key → node pointer)          (most recent → least recent)
+
+    ┌───────────────┐
+    │ key=1 ──────────────→ ┌─────────────────────────────────────────┐
+    ├───────────────┤       │                                         │
+    │ key=2 ────────────┐   │ [DUMMY] ↔ [1:A] ↔ [3:C] ↔ [2:B] ↔ [DUMMY] │
+    ├───────────────┤   │   │  HEAD    most recent   least recent  TAIL   │
+    │ key=3 ──────────┐ │   └─────────────────────────────────────────┘
+    ├───────────────┤ │ │
+    │  (empty)      │ │ └──→ points to node [2:B] in the list
+    └───────────────┘ └────→ points to node [3:C] in the list
+
+    Dummy head/tail nodes simplify edge cases — you never need
+    to check for NULL when inserting or removing at the ends.
+```
+
+### Operations Step by Step
+
+**GET(key=3)**:
+```
+    Before: [HEAD] ↔ [1:A] ↔ [3:C] ↔ [2:B] ↔ [TAIL]
+    1. Hash lookup: key=3 → node [3:C]          O(1)
+    2. Remove [3:C] from current position        O(1)
+    3. Insert [3:C] right after HEAD             O(1)
+    After:  [HEAD] ↔ [3:C] ↔ [1:A] ↔ [2:B] ↔ [TAIL]
+```
+
+**PUT(key=4, val=D) when at capacity**:
+```
+    Before: [HEAD] ↔ [3:C] ↔ [1:A] ↔ [2:B] ↔ [TAIL]
+                                        ↑ LRU — evict this
+    1. Remove [2:B] (TAIL->prev)                 O(1)
+    2. Delete key=2 from hash table              O(1)
+    3. Free node [2:B]
+    4. Create node [4:D], insert after HEAD      O(1)
+    5. Add key=4 to hash table                   O(1)
+    After:  [HEAD] ↔ [4:D] ↔ [3:C] ↔ [1:A] ↔ [TAIL]
+```
+
+---
+
 ## Exercises
 
 ### 1. `hash_table.c` — Build a Hash Table (14 tests)
@@ -325,6 +448,18 @@ Functions: `ht_create`, `ht_destroy`, `ht_set`, `ht_get`, `ht_delete`,
 
 Use your hash table concepts to count word frequencies in a string.
 Tokenize text into words and count occurrences of each word.
+
+### 3. `two_sum.c` — Two Sum, Three Ways (10 tests)
+
+Solve the classic Two Sum problem three different ways: brute force O(n²),
+hash table O(n), and two pointers on sorted arrays O(n). See how the same
+problem gets dramatically faster with better data structures.
+
+### 4. `lru_cache.c` — LRU Cache (15 tests)
+
+Build a Least Recently Used cache combining a hash table with a doubly
+linked list. Implement the linked list helpers, then create, get, put, and
+destroy operations with proper eviction.
 
 ---
 

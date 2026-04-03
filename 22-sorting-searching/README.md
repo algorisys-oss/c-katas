@@ -452,10 +452,360 @@ At least 3 comparisons needed to sort 3 elements.
 
 ---
 
+## Part 5: Two-Pointer Technique
+
+Now that you can sort and search, let's look at **algorithmic patterns** that
+solve entire families of problems. The two-pointer technique is one of the
+most useful.
+
+### The Pattern
+
+Use two indices (pointers) that move through an array or string in a
+coordinated way. There are three main flavors:
+
+**1. Opposite ends (converging)**:
+
+```
+Array: [ 1 | 3 | 5 | 7 | 11 ]
+         ^                 ^
+        left             right
+        ──→             ←──
+
+Move left right or right left based on a condition.
+Stop when left >= right.
+```
+
+**2. Same direction (fast/slow)**:
+
+```
+Array: [ 1 | 1 | 2 | 2 | 3 ]
+         ^   ^
+       slow fast  ──→
+
+slow = write position, fast = read position.
+fast scans ahead; slow only advances when we find something useful.
+```
+
+**3. Separate arrays**: one pointer per array, both moving forward.
+
+### Why It Works
+
+The key insight: a naive approach uses nested loops to check all pairs —
+O(n^2). Two pointers exploit **structure** (usually sorted order) to
+eliminate impossible pairs without checking them.
+
+For the sorted two-sum problem:
+
+```
+Find two numbers that add to 10 in [1, 3, 5, 7, 11]:
+
+  Step 1: left=0, right=4 → 1 + 11 = 12 > 10
+          ▲ Sum too big → move right left (decrease the larger value)
+
+  Step 2: left=0, right=3 → 1 + 7  = 8  < 10
+          ▲ Sum too small → move left right (increase the smaller value)
+
+  Step 3: left=1, right=3 → 3 + 7  = 10 ✓ Found!
+```
+
+Why can we skip all other pairs? Because if `arr[left] + arr[right] > target`,
+then `arr[left+1] + arr[right]` would be even bigger (since the array is
+sorted). So we can safely move `right` left. This eliminates an entire row
+of the pair matrix in one step.
+
+### Container With Most Water
+
+A classic two-pointer problem. Given heights, find the two lines that hold
+the most water:
+
+```
+     8 |    #              #
+     7 |    #  .  .  .  .  #  .  #
+     6 |    #  #  .  .  .  #  .  #
+     5 |    #  #  .  #  .  #  .  #
+     4 |    #  #  .  #  #  #  .  #
+     3 |    #  #  .  #  #  #  #  #
+     2 |    #  #  #  #  #  #  #  #
+     1 | #  #  #  #  #  #  #  #  #
+       +----------------------------
+         0  1  2  3  4  5  6  7  8
+
+Water = min(height[L], height[R]) * (R - L)
+```
+
+**Greedy insight**: always move the pointer with the **shorter** height.
+Moving the taller side can only make things worse — the width shrinks, and
+the limiting height (the shorter side) stays the same or could only
+decrease from the other side.
+
+---
+
+## Part 6: Sliding Window Technique
+
+The sliding window is a pattern for computing something over **contiguous
+subarrays** (or substrings) efficiently.
+
+### Fixed-Size Window
+
+When looking at all subarrays of exactly size k, don't recompute from
+scratch. Slide the window by removing the element that leaves and adding
+the element that enters:
+
+```
+Array: [ 2 | 1 | 5 | 1 | 3 | 2 ]     k = 3
+
+Window 1: [ 2   1   5 ]  sum = 8
+           ───────────
+Window 2:     [ 1   5   1 ]  sum = 8 - 2 + 1 = 7
+               ───────────
+Window 3:         [ 5   1   3 ]  sum = 7 - 1 + 3 = 9  ← max!
+                   ───────────
+Window 4:             [ 1   3   2 ]  sum = 9 - 5 + 2 = 6
+                       ───────────
+
+Each slide: O(1) update instead of O(k) recomputation.
+Total: O(n) instead of O(n*k).
+```
+
+### Variable-Size Window
+
+When the window size isn't fixed, we **expand** the right side until some
+condition breaks, then **shrink** from the left until the condition is
+restored:
+
+```
+Longest substring without repeats in "abcabcbb":
+
+freq[128] = {0}  (tracks character counts in window)
+
+    a b c a b c b b
+    ^               right expands →
+    left
+
+Step 1: "a"     freq[a]=1  OK, len=1
+Step 2: "ab"    freq[b]=1  OK, len=2
+Step 3: "abc"   freq[c]=1  OK, len=3
+Step 4: "abca"  freq[a]=2  DUPLICATE! Shrink from left:
+        "bca"   freq[a]=1  OK, len=3
+Step 5: "bcab"  freq[b]=2  DUPLICATE! Shrink:
+        "cab"   freq[b]=1  OK, len=3
+Step 6: "cabc"  freq[c]=2  DUPLICATE! Shrink:
+        "abc"   freq[c]=1  OK, len=3
+Step 7: "abcb"  freq[b]=2  DUPLICATE! Shrink:
+        "bcb"   freq[b]=2  Still! Shrink more:
+        "cb"    freq[b]=1  OK, len=2
+Step 8: "cbb"   freq[b]=2  DUPLICATE! Shrink:
+        "bb"    freq[b]=2  Still! Shrink:
+        "b"     freq[b]=1  OK, len=1
+
+Maximum length seen = 3 ("abc" or "bca" or "cab" or "wke")
+```
+
+The pattern works because both left and right only move forward. Each
+element is added at most once and removed at most once, so the total
+work is O(n) even though the inner while loop might run multiple times
+on some steps.
+
+---
+
+## Part 7: Merge Intervals
+
+Interval problems appear in scheduling, IP range management, and many
+other domains. The universal strategy: **sort first, then linear scan**.
+
+### The Algorithm
+
+1. Sort intervals by start time
+2. Scan left to right, merging as you go
+
+The overlap condition: `current.start <= previous.end`
+
+```
+Before merging:
+
+  Interval:  [1,3]  [2,6]            [8,10]          [15,18]
+             |---|
+               |--------|
+  Number line: 1  2  3  4  5  6  7  8  9  10 ... 15  16  17  18
+                                      |---|
+                                                       |---|
+
+After sorting by start:  [1,3], [2,6], [8,10], [15,18]
+
+Scan:
+  result = [[1,3]]
+  [2,6]: 2 <= 3? YES → merge → result = [[1,6]]
+  [8,10]: 8 <= 6? NO → add → result = [[1,6],[8,10]]
+  [15,18]: 15 <= 10? NO → add → result = [[1,6],[8,10],[15,18]]
+```
+
+### Insert Interval
+
+When inserting a new interval into an already sorted, non-overlapping list:
+
+1. **Before phase**: copy all intervals that end before the new one starts
+2. **Overlap phase**: merge all intervals that overlap with the new one
+3. **After phase**: copy all remaining intervals
+
+This is a clean three-phase linear scan — no re-sorting needed.
+
+---
+
+## Part 8: String Problems
+
+Strings in C are just arrays of characters with a null terminator. Many
+string problems use the same patterns we've already learned:
+
+### The Reverse-Twice Trick
+
+To reverse the **words** in a string (not the characters):
+1. Reverse the entire string
+2. Reverse each individual word
+
+```
+"the sky is blue"
+  → reverse all: "eulb si yks eht"
+  → reverse each word: "blue is sky the"
+```
+
+This is a two-pointer technique in disguise — each reversal uses
+converging left/right pointers.
+
+### Frequency Arrays for Character Counting
+
+Use a fixed-size array to count character occurrences:
+
+```c
+int seen[26] = {0};  /* One slot per letter */
+
+For "The quick brown fox...":
+  seen[0] = 1  (a)
+  seen[1] = 1  (b)
+  ...
+  seen[25] = 1 (z)
+  All 26 set → pangram!
+```
+
+This is O(n) time, O(1) space — the array size is constant regardless
+of input length.
+
+### Parsing and Validation
+
+When validating structured strings (like IPv6 addresses), walk through
+character by character:
+- Track your position within the expected structure
+- Count separators and group lengths
+- Validate each character against the allowed set
+
+---
+
+## Part 9: Modified Binary Search
+
+The standard binary search assumes a sorted array and looks for an exact
+match. But the **binary search pattern** — cutting the search space in
+half — applies much more broadly.
+
+### The Core Invariant
+
+At every step, you must know: **which half contains the answer?**
+
+The standard version checks `arr[mid] vs target`. Modified versions check
+different conditions, but the structure is the same:
+
+```
+while (lo < hi) {
+    mid = lo + (hi - lo) / 2;
+    if (go_right_condition) {
+        lo = mid + 1;
+    } else {
+        hi = mid;
+    }
+}
+```
+
+### Rotated Array Search
+
+A sorted array rotated at some unknown pivot:
+
+```
+Original: [0, 1, 2, 4, 5, 6, 7]
+
+Rotated:  [4, 5, 6, 7, 0, 1, 2]
+           ─────────  ────────
+           sorted↑     sorted↑
+                    ^
+               rotation point
+
+Key: when you pick mid, ONE half is always sorted.
+     Check if target falls in the sorted half's range.
+     If yes → search there. If no → search the other half.
+```
+
+### Peak Finding
+
+Find a local maximum using binary search:
+
+```
+Values:    12
+          /  \
+        8      4
+       /        \
+     3            2
+    /
+  1
+
+If arr[mid] < arr[mid+1]: peak is to the RIGHT
+   (values are still increasing)
+If arr[mid] > arr[mid+1]: peak is to the LEFT (or at mid)
+   (values are decreasing, so we've passed the peak or we're on it)
+```
+
+This is "gradient-based" binary search — we follow the slope uphill.
+
+### 2D Matrix Search
+
+A row-sorted matrix where each row starts after the previous row ends can
+be treated as a flat sorted array:
+
+```
+Matrix:               Flat view:
+┌────┬────┬────┬────┐
+│  1 │  3 │  5 │  7 │  [1, 3, 5, 7, 10, 11, 16, 20, 23, 30, 34, 50]
+├────┼────┼────┼────┤   0  1  2  3   4   5   6   7   8   9  10  11
+│ 10 │ 11 │ 16 │ 20 │
+├────┼────┼────┼────┤  flat_index 7 → row = 7/4 = 1, col = 7%4 = 3
+│ 23 │ 30 │ 34 │ 50 │              → matrix[1][3] = 20
+└────┴────┴────┴────┘
+```
+
+### First/Last with Duplicates
+
+Two binary searches with different "bias":
+
+```
+Array: [1, 3, 5, 5, 5, 5, 5, 8, 9]
+                ^           ^
+             first(5)=2  last(5)=6
+
+Leftmost:  when you find target, record it and search LEFT (hi = mid)
+Rightmost: when you find target, record it and search RIGHT (lo = mid + 1)
+```
+
+---
+
 ## Exercises
 
-1. **exercises/sorting.c** — Implement all five sorts with comparison counters
-2. **exercises/binary_search.c** — Binary search and its variations
+| # | File | Topic | Tests |
+|---|------|-------|-------|
+| 1 | **exercises/sorting.c** | Five sorting algorithms with comparison counters | 15 |
+| 2 | **exercises/binary_search.c** | Binary search and its variations | 13 |
+| 3 | **exercises/two_pointers.c** | Two-pointer technique (converging and fast/slow) | 16 |
+| 4 | **exercises/sliding_window.c** | Fixed and variable sliding windows | 13 |
+| 5 | **exercises/merge_intervals.c** | Sort, merge, and insert intervals | 11 |
+| 6 | **exercises/string_problems.c** | Reverse words, pangrams, IPv6 validation | 14 |
+| 7 | **exercises/modified_binary_search.c** | Rotated array, peak, 2D matrix, first/last | 17 |
+
+**Total: 99 tests across 7 exercise files.**
 
 ---
 

@@ -406,12 +406,147 @@ This is **O(n)** — one loop, n steps, done. The difference is staggering:
     n = 50:  Recursive ~40 BILLION calls  vs.  Iterative 49 loop iterations
 ```
 
-### Memoization Preview
+### Memoization: Caching + Recursion (Top-Down DP)
 
 There is a third approach: keep the recursive structure, but **remember** results
-you have already computed. This is called **memoization** (not memorization). We
-will explore this in a later module, but the idea is simple: before computing
-fib(n), check if you already know the answer. If so, return it immediately.
+you have already computed. This is called **memoization** (not memorization — it
+comes from "memo," as in writing yourself a note).
+
+The idea is dead simple. Before computing fib(n):
+1. Check if you already have the answer in a cache array
+2. If yes, return it immediately — no recursion needed
+3. If no, compute it recursively, **store** the result, then return it
+
+Look at the call tree for fib(5) again, but now with memoization. Crossed-out
+nodes are cache hits — they return instantly without recursing further:
+
+```
+                       fib(5)
+                      /      \
+                 fib(4)       fib(3) ← CACHE HIT (already computed)
+                /     \
+            fib(3)   fib(2) ← CACHE HIT
+           /     \
+       fib(2)   fib(1)
+       /    \
+   fib(1)  fib(0)
+```
+
+Without memoization: fib(5) makes 15 calls.
+With memoization: fib(5) makes 9 calls — and for larger n the savings are massive.
+
+Each value fib(k) is computed **exactly once** and then looked up from the cache
+every subsequent time. This turns O(2^n) into O(n).
+
+```c
+int fib_memo(int n, int cache[]) {
+    if (n <= 1) return n;
+    if (cache[n] != -1) return cache[n];    /* cache hit! */
+    cache[n] = fib_memo(n-1, cache) + fib_memo(n-2, cache);
+    return cache[n];
+}
+```
+
+### Tabulation: Iteration + Table (Bottom-Up DP)
+
+Memoization is "top-down" — you start with the big problem and recurse down.
+**Tabulation** is "bottom-up" — you start with the smallest subproblems and build
+up to the answer, filling a table iteratively.
+
+For Fibonacci, bottom-up is just the iterative solution you already wrote:
+start from fib(0) and fib(1), compute fib(2), then fib(3), and so on up to fib(n).
+No recursion, no stack overflow risk, and often faster in practice.
+
+### When Does DP Apply?
+
+Dynamic programming works when a problem has these two properties:
+
+1. **Overlapping subproblems** — the same subproblem appears multiple times.
+   Fibonacci has this: fib(3) is needed by both fib(4) and fib(5).
+
+2. **Optimal substructure** — the optimal solution to the big problem contains
+   optimal solutions to its subproblems. The best way to compute fib(5) uses
+   the best (only) way to compute fib(4) and fib(3).
+
+If a problem has both properties, you can use DP. If subproblems don't overlap
+(like in merge sort, where each half is independent), plain divide-and-conquer
+is enough — no caching needed.
+
+### Climbing Stairs: A Hidden Fibonacci
+
+Problem: you have n stairs. Each step, you can climb 1 or 2 stairs. How many
+distinct ways can you reach the top?
+
+Think about it from the top: to reach step n, you either came from step n-1
+(took 1 step) or step n-2 (took 2 steps). So:
+
+```
+    ways(n) = ways(n-1) + ways(n-2)
+```
+
+That IS the Fibonacci recurrence! With base cases ways(0)=1, ways(1)=1.
+The same memoization technique applies directly.
+
+### Coin Change: True DP
+
+Problem: given coin denominations [1, 5, 10, 25], find the minimum number of
+coins to make a given amount.
+
+Key insight: if you use a coin of value c, you need **1 + min_coins(amount - c)**
+more coins. Try every coin and pick the minimum:
+
+```
+    min_coins(amount) = 1 + min( min_coins(amount - c)  for each coin c )
+```
+
+This is best solved bottom-up with a table:
+
+```
+    amount:  0   1   2   3   4   5   6   7   8   9   10
+    coins:   0   1   2   3   4   1   2   3   4   5    1
+                                 ↑               ↑    ↑
+                              use 5           use 5  use 10
+```
+
+Each entry dp[i] = 1 + min(dp[i - c]) for each valid coin c.
+
+### Longest Common Subsequence: 2D DP
+
+Problem: given two strings, find the length of their longest common subsequence
+(LCS). A subsequence keeps the order but can skip characters.
+
+Example: LCS of "ABCDE" and "ACE" is "ACE" (length 3).
+
+Build a 2D table dp[i][j] = LCS length of the first i characters of string A
+and the first j characters of string B:
+
+```
+        ""  A  C  E
+    ""   0  0  0  0
+    A    0  1  1  1      ← A matches A, so dp[1][1] = dp[0][0] + 1 = 1
+    B    0  1  1  1      ← B doesn't match anything new
+    C    0  1  2  2      ← C matches C, so dp[3][2] = dp[2][1] + 1 = 2
+    D    0  1  2  2
+    E    0  1  2  3      ← E matches E, so dp[5][3] = dp[4][2] + 1 = 3
+```
+
+Rules:
+- If characters match: dp[i][j] = dp[i-1][j-1] + 1
+- If they don't match:  dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+- Base case: dp[0][j] = dp[i][0] = 0
+
+The answer is in dp[len_a][len_b].
+
+### Big-O Summary
+
+| Problem           | Naive             | With DP    | Space      |
+|-------------------|-------------------|------------|------------|
+| Fibonacci         | O(2^n)            | O(n)       | O(n)       |
+| Climbing stairs   | O(2^n)            | O(n)       | O(n)       |
+| Coin change       | O(k^amount)       | O(amount*k)| O(amount)  |
+| LCS               | O(2^(n+m))        | O(n*m)     | O(n*m)     |
+
+(k = number of coin denominations, n and m = string lengths)
 
 ---
 
@@ -487,6 +622,7 @@ Work through these exercises in order:
 | `power.c`             | Divide and conquer, O(log n) algorithm             |
 | `hanoi.c`             | Classic recursion problem, building intuition       |
 | `recursive_strings.c` | Recursion on arrays and strings                    |
+| `memoization.c`       | Memoization, tabulation, 2D DP, coin change, LCS   |
 
 ### Building and Running
 
@@ -516,6 +652,7 @@ comments carefully — they tell you exactly what to do.
 3. **power.c** — your first O(log n) algorithm using divide and conquer
 4. **hanoi.c** — a classic that is hard iteratively but elegant recursively
 5. **recursive_strings.c** — apply recursion to strings and arrays
+6. **memoization.c** — fix the exponential problem with caching, then go further
 
 Take your time. Draw the call stack on paper for each function before running
 it. Recursion clicks once you can see the frames in your head.
