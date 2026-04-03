@@ -3,7 +3,7 @@ CFLAGS = -Wall -Wextra -pedantic -std=c99
 
 # --- Exercise targets ---
 
-exercises: sorting binary_search two_pointers sliding_window merge_intervals string_problems modified_binary_search
+exercises: sorting binary_search two_pointers sliding_window merge_intervals string_problems modified_binary_search greedy
 
 sorting: exercises/sorting.c
 	$(CC) $(CFLAGS) -o sorting exercises/sorting.c
@@ -26,9 +26,12 @@ string_problems: exercises/string_problems.c
 modified_binary_search: exercises/modified_binary_search.c
 	$(CC) $(CFLAGS) -o modified_binary_search exercises/modified_binary_search.c
 
+greedy: exercises/greedy.c
+	$(CC) $(CFLAGS) -o greedy exercises/greedy.c
+
 # --- Solution targets (prefix with sol-) ---
 
-solutions: sol-sorting sol-binary_search sol-two_pointers sol-sliding_window sol-merge_intervals sol-string_problems sol-modified_binary_search
+solutions: sol-sorting sol-binary_search sol-two_pointers sol-sliding_window sol-merge_intervals sol-string_problems sol-modified_binary_search sol-greedy
 
 sol-sorting: solutions/sorting.c
 	$(CC) $(CFLAGS) -o sol-sorting solutions/sorting.c
@@ -50,6 +53,9 @@ sol-string_problems: solutions/string_problems.c
 
 sol-modified_binary_search: solutions/modified_binary_search.c
 	$(CC) $(CFLAGS) -o sol-modified_binary_search solutions/modified_binary_search.c
+
+sol-greedy: solutions/greedy.c
+	$(CC) $(CFLAGS) -o sol-greedy solutions/greedy.c
 
 # --- Test: build and run solutions to verify correctness ---
 
@@ -75,12 +81,15 @@ test: solutions
 	@echo "--- Modified Binary Search ---"
 	./sol-modified_binary_search
 	@echo ""
+	@echo "--- Greedy Algorithms ---"
+	./sol-greedy
+	@echo ""
 	@echo "All solution tests complete."
 
 # --- Clean up ---
 
 clean:
-	rm -f sorting binary_search two_pointers sliding_window merge_intervals string_problems modified_binary_search
-	rm -f sol-sorting sol-binary_search sol-two_pointers sol-sliding_window sol-merge_intervals sol-string_problems sol-modified_binary_search
+	rm -f sorting binary_search two_pointers sliding_window merge_intervals string_problems modified_binary_search greedy
+	rm -f sol-sorting sol-binary_search sol-two_pointers sol-sliding_window sol-merge_intervals sol-string_problems sol-modified_binary_search sol-greedy
 
 .PHONY: exercises solutions test clean

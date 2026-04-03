@@ -3,7 +3,7 @@ CFLAGS = -Wall -Wextra -pedantic -std=c99
 
 # --- Exercise targets ---
 
-exercises: bst heap prefix_sums bit_tricks segment_tree fenwick_tree
+exercises: bst heap prefix_sums bit_tricks segment_tree fenwick_tree trie top_k
 
 bst: exercises/bst.c
 	$(CC) $(CFLAGS) -o bst exercises/bst.c
@@ -23,9 +23,15 @@ segment_tree: exercises/segment_tree.c
 fenwick_tree: exercises/fenwick_tree.c
 	$(CC) $(CFLAGS) -o fenwick_tree exercises/fenwick_tree.c
 
+trie: exercises/trie.c
+	$(CC) $(CFLAGS) -o trie exercises/trie.c
+
+top_k: exercises/top_k.c
+	$(CC) $(CFLAGS) -o top_k exercises/top_k.c
+
 # --- Solution targets (prefix with sol-) ---
 
-solutions: sol-bst sol-heap sol-prefix_sums sol-bit_tricks sol-segment_tree sol-fenwick_tree
+solutions: sol-bst sol-heap sol-prefix_sums sol-bit_tricks sol-segment_tree sol-fenwick_tree sol-trie sol-top_k
 
 sol-bst: solutions/bst.c
 	$(CC) $(CFLAGS) -o sol-bst solutions/bst.c
@@ -44,6 +50,12 @@ sol-segment_tree: solutions/segment_tree.c
 
 sol-fenwick_tree: solutions/fenwick_tree.c
 	$(CC) $(CFLAGS) -o sol-fenwick_tree solutions/fenwick_tree.c
+
+sol-trie: solutions/trie.c
+	$(CC) $(CFLAGS) -o sol-trie solutions/trie.c
+
+sol-top_k: solutions/top_k.c
+	$(CC) $(CFLAGS) -o sol-top_k solutions/top_k.c
 
 # --- Test: build and run solutions to verify correctness ---
 
@@ -66,6 +78,12 @@ test: solutions
 	@echo "--- Fenwick Tree ---"
 	./sol-fenwick_tree
 	@echo ""
+	@echo "--- Trie (Prefix Tree) ---"
+	./sol-trie
+	@echo ""
+	@echo "--- Top-K & K-Way Merge ---"
+	./sol-top_k
+	@echo ""
 	@echo "All solution tests complete."
 
 # --- Debug exercise targets ---
@@ -79,8 +97,8 @@ debug-solution: solutions/debug_bst.c
 # --- Clean up ---
 
 clean:
-	rm -f bst heap prefix_sums bit_tricks segment_tree fenwick_tree
-	rm -f sol-bst sol-heap sol-prefix_sums sol-bit_tricks sol-segment_tree sol-fenwick_tree
+	rm -f bst heap prefix_sums bit_tricks segment_tree fenwick_tree trie top_k
+	rm -f sol-bst sol-heap sol-prefix_sums sol-bit_tricks sol-segment_tree sol-fenwick_tree sol-trie sol-top_k
 	rm -f exercises/debug_bst solutions/debug_bst
 
 .PHONY: exercises solutions test clean debug debug-solution

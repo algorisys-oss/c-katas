@@ -793,6 +793,131 @@ Rightmost: when you find target, record it and search RIGHT (lo = mid + 1)
 
 ---
 
+## Part 10: Greedy Algorithms
+
+A **greedy algorithm** makes the choice that looks best RIGHT NOW at each
+step, without worrying about the future. Sometimes this gives the optimal
+answer. Sometimes it does not (and you need dynamic programming instead).
+
+### What Makes an Algorithm "Greedy"
+
+The problem must have two properties:
+
+1. **Greedy choice property** -- a locally optimal choice leads to a globally
+   optimal solution. Taking the best option now never prevents you from
+   reaching the best overall answer.
+
+2. **Optimal substructure** -- the optimal solution contains optimal solutions
+   to its subproblems.
+
+### Greedy vs Dynamic Programming
+
+```
+Greedy: "Take the best NOW"     → Activity selection, Jump game
+DP:     "Try ALL options, pick best" → Knapsack, Edit distance
+
+Rule of thumb: if the problem says "maximum number" or "minimum number"
+and making a locally best choice never hurts the future → try greedy.
+If choices interact (taking item A affects what items B,C are worth) → use DP.
+```
+
+### Activity Selection
+
+Given activities with start/end times, pick the maximum number of
+non-overlapping activities. **Greedy: always pick the activity that ends
+earliest** -- it leaves the most room for future activities.
+
+```
+Timeline:
+0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16
+|  [====]                                            (1,4)  *
+|     [====]                                         (3,5)
+|  [=========]                                       (0,6)
+|              [==]                                  (5,7)  *
+|     [==========]                                   (3,9)
+|              [======]                              (5,9)
+|                 [======]                           (6,10)
+|                       [====]                       (8,11) *
+|                       [======]                     (8,12)
+|  [========================]                        (2,14)
+|                                   [======]         (12,16)*
+
+Greedy picks: (1,4), (5,7), (8,11), (12,16) = 4 activities
+```
+
+Why does "earliest end time" work? By finishing as early as possible, we
+leave the maximum remaining time for future activities. Any other choice
+either finishes later (leaving less room) or skips an option that finishes
+sooner.
+
+### Jump Game
+
+Given an array where `arr[i]` = max jump length from position i, can you
+reach the last index? **Greedy: track the farthest reachable position.**
+
+```
+arr = [2, 3, 1, 1, 4]
+
+Index:    0    1    2    3    4
+Value:    2    3    1    1    4
+Reach:    2    4    3    4    8
+          ^    ^              ^
+          |    farthest jumps to 4
+          starts at 2         goal reached!
+
+arr = [3, 2, 1, 0, 4]
+
+Index:    0    1    2    3    4
+Value:    3    2    1    0    4
+Reach:    3    3    3    3    -
+                         ^
+                         stuck! can't pass index 3
+```
+
+### Task Scheduler
+
+Given tasks with a cooldown period, find the minimum time to execute all.
+**Greedy: the most frequent task determines the frame size.**
+
+```
+Tasks: [A,A,A,B,B,B], cooldown n=2
+
+Slot:   1    2    3    4    5    6    7    8
+Task:   A    B   idle   A    B   idle   A    B
+
+Frames:  [A B _] [A B _] [A B]
+          frame1   frame2   final
+
+Formula: (max_freq - 1) * (n + 1) + count_of_max_freq_tasks
+       = (3 - 1) * (2 + 1) + 2 = 8
+```
+
+### Gas Station
+
+N stations in a circle. Fuel balance at each station:
+
+```
+Station:   0     1     2     3     4
+Gas:       1     2     3     4     5
+Cost:      3     4     5     1     2
+Balance:  -2    -2    -2    +3    +3
+
+Total balance = 0 → solution exists!
+
+Key insight: if you run out traveling from station i to j,
+then no station between i and j can be the starting point.
+Skip directly to j+1.
+
+Start at 3: tank = 0
+  Station 3: +4 -1 = 3
+  Station 4: +5 -2 = 6
+  Station 0: +1 -3 = 4
+  Station 1: +2 -4 = 2
+  Station 2: +3 -5 = 0  ✓ made it!
+```
+
+---
+
 ## Exercises
 
 | # | File | Topic | Tests |
@@ -804,8 +929,9 @@ Rightmost: when you find target, record it and search RIGHT (lo = mid + 1)
 | 5 | **exercises/merge_intervals.c** | Sort, merge, and insert intervals | 11 |
 | 6 | **exercises/string_problems.c** | Reverse words, pangrams, IPv6 validation | 14 |
 | 7 | **exercises/modified_binary_search.c** | Rotated array, peak, 2D matrix, first/last | 17 |
+| 8 | **exercises/greedy.c** | Activity selection, jump game, task scheduler, gas station | 19 |
 
-**Total: 99 tests across 7 exercise files.**
+**Total: 118 tests across 8 exercise files.**
 
 ---
 

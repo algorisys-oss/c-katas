@@ -528,6 +528,142 @@ destination is guaranteed to be the shortest path.
 
 ---
 
+## Union-Find (Disjoint Set Union)
+
+Union-Find answers one question blazingly fast: **"Are these two elements in
+the same group?"** It tracks connected components as edges are added
+dynamically.
+
+### The Problem
+
+Imagine you are building a social network. Users arrive and form friendships
+over time. You need to answer queries like "Are Alice and Bob in the same
+friend group?" After thousands of friendships and millions of queries, you
+need this to be fast.
+
+BFS/DFS could answer it, but you would have to redo the traversal for every
+single query. Union-Find answers it in nearly O(1) per query.
+
+### Forest-of-Trees Representation
+
+Each group is a **tree** where every node points to its parent. The **root**
+of each tree is the group's representative. Finding which group an element
+belongs to means walking up to the root.
+
+```
+  Initially (5 elements, each is its own group):
+
+    0    1    2    3    4      parent: [0, 1, 2, 3, 4]
+    (five separate trees)              count = 5
+
+  After union(0,1) and union(2,3):
+
+    0    2                     parent: [0, 0, 2, 2, 4]
+   /    /                              count = 3
+  1    3       4
+
+  After union(0,2):
+
+      0                        parent: [0, 0, 0, 2, 4]
+     / \                               count = 2
+    1   2
+        |
+        3        4
+```
+
+### Why Naive Union is Slow
+
+Without any tricks, unions can create tall chains. `find()` must walk the
+entire chain to reach the root. Worst case: O(n) per find.
+
+```
+  Worst case — a tall chain:
+
+    0            find(4) follows:
+    |            4 → 3 → 2 → 1 → 0
+    1            That's 4 steps!
+    |
+    2
+    |
+    3
+    |
+    4
+```
+
+Two optimizations fix this, making each operation nearly O(1):
+
+### Path Compression
+
+When you call `find(x)`, you walk up to the root. Path compression makes
+**every node on that path point directly to the root**. Future calls are
+instant.
+
+```
+  Before find(4):           After find(4):
+
+      0                          0
+      |                        / | \
+      1                       1  2  4
+      |                          |
+      2                          3
+      |
+      3
+      |
+      4
+
+  Chain 4→3→2→1→0           All point to root 0!
+```
+
+Implementation is elegant with recursion:
+
+```c
+int uf_find(UnionFind *uf, int x) {
+    if (uf->parent[x] != x)
+        uf->parent[x] = uf_find(uf, uf->parent[x]);  /* compress! */
+    return uf->parent[x];
+}
+```
+
+### Union by Rank
+
+When merging two trees, attach the **shorter** tree under the **taller** one.
+This keeps trees flat (logarithmic height at worst).
+
+```
+  Bad (no rank):              Good (union by rank):
+
+      0                           0
+      |                          / \
+      1                         1   2
+      |                             |
+      2                             3
+      |
+      3
+
+  height = 4                  height = 2
+```
+
+### Amortized Complexity
+
+With both path compression and union by rank, each operation takes amortized
+**O(alpha(n))** time, where alpha is the **inverse Ackermann function**.
+
+alpha(n) grows so slowly that for any practical input size (even 10^80, the
+number of atoms in the universe), alpha(n) <= 5. It is effectively **constant
+time**.
+
+### When to Use Union-Find vs BFS/DFS
+
+| Scenario                      | BFS/DFS          | Union-Find       |
+|-------------------------------|-------------------|------------------|
+| Static graph, one query       | Better            | Overkill         |
+| Dynamic edges, many queries   | Redo traversal    | Blazing fast     |
+| Cycle detection               | Works             | Also works       |
+| Kruskal's MST                 | N/A               | Essential        |
+| Number of islands (static)    | Standard approach | Also works       |
+
+---
+
 ## Exercises
 
 | File               | Concepts                                    | Tests |
@@ -536,6 +672,7 @@ destination is guaranteed to be the shortest path.
 | `maze.c`           | BFS maze solver, path reconstruction         | 8     |
 | `topo_sort.c`      | Topological sort (Kahn's), cycle detect      | 10    |
 | `grid_problems.c`  | Islands (DFS), rotten oranges (multi-source BFS), grid shortest path | 14 |
+| `union_find.c`     | Union-Find with path compression, union by rank, islands | 15 |
 
 Build and test:
 ```bash

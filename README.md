@@ -1,6 +1,6 @@
 # C Katas — Systems Programming from First Principles
 
-**30 modules. 900+ tests. From "what is a computer" to building a database, ray tracer, and neural network — all in C.**
+**30 modules. 1000+ tests. From "what is a computer" to building a database, ray tracer, and neural network — all in C.**
 
 A ground-up C99 systems programming curriculum designed for absolute beginners who want deep, intuitive understanding of how computers actually work. No prior programming experience required.
 
@@ -99,7 +99,7 @@ gcc -Wall -Wextra -pedantic -std=c99
 | 02 | Types, Variables & Operators | int/float/char, two's complement, IEEE 754, bitwise | 3 |
 | 03 | Control Flow | if/else, loops, flowcharts, De Morgan's laws | 4 |
 | 04 | Functions & Program Structure | Call stack, scope, headers, pass-by-value | 4 |
-| 05 | Recursion & Algorithmic Thinking | Base cases, Big-O, divide and conquer, memoization, DP | 6 |
+| 05 | Recursion & Algorithmic Thinking | Base cases, Big-O, divide and conquer, memoization, DP, backtracking | 8 |
 
 ### Phase 2: Pointers & Memory (Modules 06–08)
 | # | Module | Key Concepts | Exercises |
@@ -116,8 +116,8 @@ gcc -Wall -Wextra -pedantic -std=c99
 | 11 | Linked Lists | Singly/doubly linked, Y-shape intersection | 4 |
 | 12 | Stacks & Queues | LIFO/FIFO, circular buffer, expression eval, monotonic stack, decode string | 5 |
 | 13 | Hash Tables | Hash functions, collisions, open addressing, two sum, LRU cache | 5 |
-| 14 | Sorting & Searching | Binary search, quicksort, mergesort, two pointers, sliding window, intervals | 7 |
-| 15 | Trees & Heaps | BST, AVL, heap, prefix sums, segment tree, Fenwick tree | 7 |
+| 14 | Sorting & Searching | Binary search, quicksort, mergesort, two pointers, sliding window, intervals, greedy | 8 |
+| 15 | Trees & Heaps | BST, AVL, heap, prefix sums, segment tree, Fenwick tree, trie, top-K | 9 |
 
 ### Phase 4: Systems Building Blocks (Modules 16–21)
 | # | Module | Key Concepts | Exercises |
@@ -126,7 +126,7 @@ gcc -Wall -Wextra -pedantic -std=c99
 | 17 | Text, Unicode & Encoding | ASCII, UTF-8, encoding/decoding, validation | 3 |
 | 18 | Date & Time | Unix epoch, leap years, timezones, formatting | 1 |
 | 19 | Preprocessor & Build Systems | Macros, conditional compilation, Makefiles | 1 |
-| 20 | Graphs | BFS, DFS, Dijkstra, topological sort, islands, rotten oranges | 4 |
+| 20 | Graphs | BFS, DFS, Dijkstra, topological sort, islands, rotten oranges, union-find | 5 |
 | 21 | Processes & Concurrency | fork/exec, threads, mutexes, atomics, producer-consumer | 3 |
 
 ### Phase 5: Building Real Systems (Modules 22–28c)

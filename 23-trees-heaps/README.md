@@ -881,6 +881,241 @@ To update index 3 (add a delta):
 
 ---
 
+## Tries (Prefix Trees)
+
+A **trie** (from "reTRIEval") is a tree where each edge represents a character
+and paths from root to nodes spell out strings. It's the go-to data structure
+for prefix-based operations: autocomplete, spell checking, IP routing.
+
+### What a Trie Looks Like
+
+After inserting "app", "apple", "application", "bat", "ball":
+
+```
+               (root)
+              /      \
+            a          b
+            |          |
+            p          a
+            |         / \
+            p        l   t*
+           /|\       |
+          *  l  i    l*
+             |  |
+             e  c
+             |  |
+             *  a
+                |
+                t
+                |
+                i
+                |
+                o
+                |
+                n*
+
+  * = is_end_of_word (a complete word ends here)
+```
+
+### Insert Walkthrough: Adding "apple"
+
+```
+  Start with empty trie (just root):
+
+  Step 1: 'a' — root has no child 'a', create node → move to it
+          prefix_count at 'a' node: 1
+
+  Step 2: 'p' — 'a' node has no child 'p', create node → move to it
+          prefix_count at 'p' node: 1
+
+  Step 3: 'p' — first 'p' node has no child 'p', create node → move to it
+          prefix_count at second 'p' node: 1
+
+  Step 4: 'l' — second 'p' node has no child 'l', create node → move to it
+          prefix_count at 'l' node: 1
+
+  Step 5: 'e' — 'l' node has no child 'e', create node → move to it
+          prefix_count at 'e' node: 1
+          Mark is_end_of_word = 1
+
+  Result:
+      (root) → [a] → [p] → [p] → [l] → [e]*
+               pc=1  pc=1  pc=1  pc=1  pc=1
+```
+
+### Search vs starts_with
+
+```
+  Trie contains: "app", "apple"
+
+  search("app")    → Walk a→p→p.  End of word? YES → return 1
+  search("ap")     → Walk a→p.    End of word? NO  → return 0
+  search("apt")    → Walk a→p.    Child 't'? NULL   → return 0
+
+  starts_with("ap")  → Walk a→p.  Reached end of prefix? YES → return 1
+  starts_with("ax")  → Walk a.    Child 'x'? NULL → return 0
+```
+
+The difference: `search` needs `is_end_of_word` to be set at the last node.
+`starts_with` only cares that the path exists.
+
+### prefix_count: Why It's Useful
+
+Each node tracks how many words pass through it. This lets you answer
+"how many words start with this prefix?" in O(L) time without scanning.
+
+```
+  After inserting "app", "apple", "application":
+
+  root → [a] → [p] → [p] → ...
+         pc=3  pc=3  pc=3
+
+  count_prefix("app") = 3  (walk to the second 'p' node, return its count)
+  count_prefix("apple") = 1
+```
+
+### Trie Data Structure
+
+```c
+#define ALPHABET_SIZE 26
+
+typedef struct TrieNode {
+    struct TrieNode *children[ALPHABET_SIZE];  /* one slot per letter */
+    int is_end_of_word;     /* 1 if a complete word ends here */
+    int prefix_count;       /* how many words pass through this node */
+} TrieNode;
+```
+
+Each node has 26 child pointers (a-z). Most will be NULL — that's fine.
+To map a character to an index: `index = c - 'a'`.
+
+### Complexity
+
+| Operation      | Time    | Why                                          |
+|----------------|---------|----------------------------------------------|
+| Insert         | O(L)    | Walk/create L nodes (L = word length)        |
+| Search         | O(L)    | Walk L nodes                                 |
+| Starts with    | O(L)    | Walk L nodes                                 |
+| Count prefix   | O(L)    | Walk L nodes, read prefix_count              |
+| Autocomplete   | O(L+R)  | Walk L nodes + DFS over R result characters  |
+| Delete         | O(L)    | Walk L nodes, clean up                       |
+
+### Trie vs Hash Table
+
+```
+  ┌──────────────────┬────────────┬─────────────────────┐
+  │ Operation        │ Hash Table │ Trie                │
+  ├──────────────────┼────────────┼─────────────────────┤
+  │ Exact lookup     │ O(1) avg   │ O(L)                │
+  │ Prefix search    │ O(n)       │ O(L)                │
+  │ Autocomplete     │ O(n)       │ O(L + results)      │
+  │ Memory           │ Lower      │ Higher (26 ptrs/node│
+  │ Ordered iteration│ No         │ Yes (alphabetical)  │
+  └──────────────────┴────────────┴─────────────────────┘
+
+  L = word length, n = total words in structure
+```
+
+Hash tables win on exact lookup. Tries win on anything prefix-related.
+
+---
+
+## Top-K and Heap Applications
+
+### The Pattern
+
+When you need the "k best" or "k worst" of something, think **heap**.
+
+The key insight for "top k largest": use a **min-heap of size k**. The root
+is the SMALLEST of the k largest elements seen so far. Any new element bigger
+than the root deserves a spot — pop the root and push the new element.
+
+```
+  Stream: 7, 2, 9, 1, 5, 8, 3    (find top 3 largest)
+
+  Min-heap of size 3:
+
+  After 7:       After 2:       After 9:       After 1:
+    [7]           [2]            [2]            [2]
+                  / \            / \            / \
+                [7]            [7] [9]        [7] [9]
+                                              (1 < 2, skip)
+
+  After 5:       After 8:       After 3:
+    [5]            [7]            [7]
+    / \            / \            / \
+  [7] [9]       [8] [9]        [8] [9]
+  (5>2, replace) (8>5, replace) (3 < 7, skip)
+
+  Final heap root = 7 = the 3rd largest.  Heap contains {7, 8, 9}.
+```
+
+### K-Way Merge: The Conveyor Belt Analogy
+
+Imagine k conveyor belts, each carrying items in sorted order. You always
+pick the smallest item visible across all belts, then advance that belt.
+
+A min-heap of size k makes this efficient — always O(log k) to find the
+smallest:
+
+```
+  Array 1: [1, 4, 5]     Array 2: [1, 3, 4]     Array 3: [2, 6]
+             ^                      ^                      ^
+
+  Heap: [1(arr1), 1(arr2), 2(arr3)]
+
+  Pop 1(arr1) → output: [1]     advance arr1
+  Heap: [1(arr2), 2(arr3), 4(arr1)]
+
+  Pop 1(arr2) → output: [1,1]   advance arr2
+  Heap: [2(arr3), 4(arr1), 3(arr2)]
+
+  Pop 2(arr3) → output: [1,1,2] advance arr3
+  ...and so on until all arrays are exhausted.
+
+  Final: [1, 1, 2, 3, 4, 4, 5, 6]
+```
+
+### Median of a Stream: The Two-Heap Trick
+
+Keep all numbers split into two halves using two heaps:
+
+```
+  max-heap (lower half)         min-heap (upper half)
+  Root = largest of small       Root = smallest of large
+
+       [3]                           [5]
+       / \                           / \
+     [1] [2]                       [7] [8]
+
+  Lower half: {1, 2, 3}         Upper half: {5, 7, 8}
+
+  If same size: median = (max_root + min_root) / 2 = (3 + 5) / 2 = 4.0
+  If max-heap bigger: median = max_root
+  If min-heap bigger: median = min_root
+```
+
+Balancing rule: after each insertion, if one heap has 2+ more elements
+than the other, move its root to the other heap.
+
+### Complexity
+
+```
+  ┌─────────────────────┬──────────────┬──────────────────────────────┐
+  │ Problem             │ Time         │ Space                        │
+  ├─────────────────────┼──────────────┼──────────────────────────────┤
+  │ Top-K frequent      │ O(n + m·logk)│ O(n) freq array + O(k) heap │
+  │ Kth largest         │ O(n·log k)   │ O(k)                        │
+  │ Merge K sorted      │ O(N·log k)   │ O(k) heap + O(N) output     │
+  │ Median of stream    │ O(n·log n)   │ O(n)                        │
+  └─────────────────────┴──────────────┴──────────────────────────────┘
+
+  n = input size, k = parameter, N = total elements across all arrays
+  m = number of unique values (for top-K frequent)
+```
+
+---
+
 ## Exercises
 
 1. **`bst.c`** — Implement a binary search tree with insert, search, delete,
@@ -901,6 +1136,12 @@ To update index 3 (add a delta):
 
 6. **`fenwick_tree.c`** — Build, update, query, range query, and point query
    on a Fenwick tree (Binary Indexed Tree). ~14 tests.
+
+7. **`trie.c`** — Implement a trie with insert, search, starts_with,
+   count_prefix, autocomplete, and destroy. ~18 tests.
+
+8. **`top_k.c`** — Top-K frequent elements, kth largest, merge K sorted
+   arrays, and median of a stream using heaps. ~15 tests.
 
 ---
 

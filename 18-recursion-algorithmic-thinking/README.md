@@ -611,7 +611,152 @@ itself n times (O(n)), we square the result and halve the exponent (O(log n)).
 
 ---
 
-## 8. Katas
+## 8. Backtracking
+
+Backtracking is the most important recursion pattern for problem-solving. The key
+idea: **build a solution incrementally, and if the current path can't lead to a
+valid solution, UNDO the last choice and try a different path**.
+
+Think of exploring a maze: go forward until you hit a dead end, then retrace
+your steps and try a different turn.
+
+### The Pattern
+
+Every backtracking algorithm follows this template:
+
+```
+backtrack(choices_made_so_far):
+    if we have a complete solution:
+        record/print it
+        return
+    for each possible next choice:
+        if this choice is valid:
+            make the choice
+            backtrack(choices_made_so_far + this choice)
+            UNDO the choice    <-- this is the "backtrack" step
+```
+
+The UNDO step is critical: after the recursive call returns, the state must be
+exactly as it was before so the next loop iteration can try a different choice
+from the same starting point.
+
+### Decision Tree
+
+For generating subsets of [1, 2], every element has two choices (include or skip):
+
+```
+                        {}
+                      /    \
+                skip 1      include 1
+                /    \        /    \
+          skip 2  incl 2  skip 2  incl 2
+            |       |       |       |
+           {}      {2}     {1}    {1,2}     <-- 4 subsets = 2^2
+```
+
+Each path from root to leaf represents one complete set of decisions. The number
+of leaves is 2^n because each element has 2 choices.
+
+### Pruning: Why Backtracking Beats Brute Force
+
+Brute force generates ALL possibilities, then filters out invalid ones.
+Backtracking filters AS IT GOES, cutting off entire subtrees early.
+
+N-Queens example (4x4 board): after placing a queen in row 0 column 0, we
+discover that row 1 columns 0 and 1 are both attacked. Instead of generating
+all possible boards with queens at (0,0) and (1,0), we immediately skip that
+entire branch. This is called **pruning**.
+
+```
+                             []
+                     /     |     |     \
+               Q@col0  Q@col1  Q@col2  Q@col3     <- row 0
+               /  |  \
+          Q@1  Q@2  Q@3                            <- row 1
+           X    |    X          X = pruned (attacked)
+               ...
+```
+
+### Time Complexity
+
+Backtracking problems are usually exponential — and that's expected:
+- Subsets: O(2^n) — you MUST generate 2^n subsets
+- Permutations: O(n!) — there ARE n! permutations
+- N-Queens: much less than n^n thanks to pruning, but still exponential
+
+The point isn't to avoid exponential time (impossible when the output is
+exponential). The point is to **not waste time on branches that can never work**.
+
+---
+
+## 9. Advanced Dynamic Programming
+
+In the memoization kata, you learned that DP applies when a problem has
+**overlapping subproblems** and **optimal substructure**. You solved Fibonacci,
+stair climbing, coin change, and LCS.
+
+Now we cover five classic DP patterns that appear throughout computer science.
+Almost every DP problem you'll encounter fits one of these patterns.
+
+### The Five Classic DP Patterns
+
+1. **0/1 Knapsack** — for each item, choose to take it or skip it.
+   Table: `dp[i][w]` = best value using items 0..i-1 with capacity w.
+
+2. **Sequence DP** — `dp[i]` depends on all `dp[j]` where j < i.
+   Example: Longest Increasing Subsequence (LIS).
+
+3. **Two-string DP** — 2D table indexed by positions in two strings.
+   Example: Edit Distance (extends LCS you already know).
+
+4. **Interval DP** — `dp[i][j]` represents a substring or subarray range.
+   Example: Longest Palindromic Subsequence (LPS).
+
+5. **String Partition DP** — can we split s[0..i] into valid pieces?
+   Example: Word Break.
+
+### How to Identify the Pattern
+
+Ask yourself:
+- Am I choosing to **take or skip** each item? -> Knapsack
+- Does `dp[i]` depend on **earlier elements** in a sequence? -> Sequence DP
+- Am I comparing **two strings** character by character? -> Two-string DP
+- Am I working with **substrings** s[i..j]? -> Interval DP
+- Am I **splitting a string** into valid segments? -> String Partition DP
+
+### Edit Distance DP Table
+
+Converting "kit" to "sit" (replace k with s = 1 operation):
+
+```
+          ""  s   i   t
+      ""   0  1   2   3      <- converting "" to "sit" costs 3 inserts
+      k    1  1   2   3      <- k!=s: 1+min(0,1,1) = 1
+      i    2  2   1   2      <- i==i: copy diagonal = 1
+      t    3  3   2   1      <- t==t: copy diagonal = 1
+                        ^
+                   answer = 1
+```
+
+Each cell considers three operations (insert, delete, replace) and takes the
+minimum. When characters match, we copy the diagonal (no operation needed).
+
+### All DP Problems in This Curriculum
+
+| Problem                       | Pattern           | Dimensions | Complexity   |
+|-------------------------------|-------------------|------------|--------------|
+| Fibonacci / Stair Climbing    | Linear DP         | 1D         | O(n)         |
+| Coin Change                   | Unbounded Knapsack| 1D         | O(n * coins) |
+| LCS (Longest Common Subseq)  | Two-string DP     | 2D         | O(m * n)     |
+| 0/1 Knapsack                 | 0/1 Knapsack      | 2D         | O(n * W)     |
+| LIS (Longest Increasing Sub) | Sequence DP       | 1D         | O(n^2)       |
+| Edit Distance                 | Two-string DP     | 2D         | O(m * n)     |
+| Longest Palindromic Subseq   | Interval DP       | 2D         | O(n^2)       |
+| Word Break                    | String Partition   | 1D         | O(n * dict)  |
+
+---
+
+## 10. Katas
 
 Work through these exercises in order:
 
@@ -623,6 +768,8 @@ Work through these exercises in order:
 | `hanoi.c`             | Classic recursion problem, building intuition       |
 | `recursive_strings.c` | Recursion on arrays and strings                    |
 | `memoization.c`       | Memoization, tabulation, 2D DP, coin change, LCS   |
+| `backtracking.c`      | Subsets, permutations, N-Queens, Sudoku, word search|
+| `advanced_dp.c`       | Knapsack, LIS, edit distance, LPS, word break      |
 
 ### Building and Running
 
@@ -653,6 +800,8 @@ comments carefully — they tell you exactly what to do.
 4. **hanoi.c** — a classic that is hard iteratively but elegant recursively
 5. **recursive_strings.c** — apply recursion to strings and arrays
 6. **memoization.c** — fix the exponential problem with caching, then go further
+7. **backtracking.c** — the most important recursion pattern for problem-solving
+8. **advanced_dp.c** — five classic DP patterns that cover most interview problems
 
 Take your time. Draw the call stack on paper for each function before running
 it. Recursion clicks once you can see the frames in your head.
