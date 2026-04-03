@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <assert.h>
 
+/* Note: real strlen returns size_t, but we use int here for simplicity.
+ * This version works correctly for strings up to INT_MAX characters. */
 int my_strlen(const char *s)
 {
     int len = 0;

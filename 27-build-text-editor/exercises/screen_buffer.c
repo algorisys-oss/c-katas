@@ -48,7 +48,7 @@ typedef struct {
  */
 ScreenBuffer screen_create(int width, int height)
 {
-    ScreenBuffer sb;
+    ScreenBuffer sb = {0};
     (void)width;
     (void)height;
     /* TODO: allocate sb.cells, set width/height, fill with spaces */

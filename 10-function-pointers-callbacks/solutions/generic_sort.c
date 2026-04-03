@@ -32,7 +32,10 @@ int compare_ints_asc(const void *a, const void *b)
 {
     int ia = *(const int *)a;
     int ib = *(const int *)b;
-    return ia - ib;
+    /* Don't use ia - ib: it overflows when ia and ib differ by > INT_MAX */
+    if (ia < ib) return -1;
+    if (ia > ib) return 1;
+    return 0;
 }
 
 int compare_ints_desc(const void *a, const void *b)

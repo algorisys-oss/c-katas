@@ -30,7 +30,8 @@
  * Example: MIN(3, 7) -> 3
  *          MIN(2+1, 1+1) -> 2
  */
-/* TODO: #define MIN(a, b) ... */
+/* TODO: replace this stub with the real implementation */
+#define MIN(a, b) (0)
 
 /* ── Macro 2: MAX(a, b) ──────────────────────────────────────────
  * Return the larger of two values.
@@ -39,7 +40,8 @@
  * Example: MAX(3, 7) -> 7
  *          MAX(-5, -2) -> -2
  */
-/* TODO: #define MAX(a, b) ... */
+/* TODO: replace this stub with the real implementation */
+#define MAX(a, b) (0)
 
 /* ── Macro 3: SWAP(a, b) ─────────────────────────────────────────
  * Swap two variables of the same type.
@@ -49,7 +51,8 @@
  * Example: int a = 10, b = 20;
  *          SWAP(a, b);  // now a == 20, b == 10
  */
-/* TODO: #define SWAP(a, b) do { ... } while (0) */
+/* TODO: replace this stub with the real implementation */
+#define SWAP(a, b) do { (void)(a); (void)(b); } while (0)
 
 /* ── Macro 4: ARRAY_SIZE(arr) ────────────────────────────────────
  * Return the number of elements in a stack-allocated array.
@@ -57,7 +60,8 @@
  *
  * Example: int arr[5]; ARRAY_SIZE(arr) -> 5
  */
-/* TODO: #define ARRAY_SIZE(arr) ... */
+/* TODO: replace this stub with the real implementation */
+#define ARRAY_SIZE(arr) (0)
 
 /* ── Macro 5: CLAMP(val, lo, hi) ─────────────────────────────────
  * Clamp a value to the range [lo, hi].
@@ -67,14 +71,16 @@
  *          CLAMP(-3, 0, 10) -> 0
  *          CLAMP(15, 0, 10) -> 10
  */
-/* TODO: #define CLAMP(val, lo, hi) ... */
+/* TODO: replace this stub with the real implementation */
+#define CLAMP(val, lo, hi) (0)
 
 /* ── Macro 6: STRINGIFY(x) ───────────────────────────────────────
  * Turn a token into a string literal using the # operator.
  *
  * Example: STRINGIFY(hello) -> "hello"
  */
-/* TODO: #define STRINGIFY(x) ... */
+/* TODO: replace this stub with the real implementation */
+#define STRINGIFY(x) ""
 
 /* ── Macro 7: CONCAT(a, b) ───────────────────────────────────────
  * Paste two tokens together using the ## operator.
@@ -82,7 +88,8 @@
  * Example: int my_var = 42;
  *          CONCAT(my, _var) -> my_var -> 42
  */
-/* TODO: #define CONCAT(a, b) ... */
+/* TODO: replace this stub with the real implementation */
+#define CONCAT(a, b) (0)
 
 /* ── Macro 8: LOG(level, fmt, ...) ───────────────────────────────
  * Variadic debug logging macro that prints to stderr.
@@ -93,7 +100,8 @@
  * Example: LOG("INFO", "x = %d", 42);
  * Output:  [INFO] macros.c:99: x = 42
  */
-/* TODO: #define LOG(level, fmt, ...) ... */
+/* TODO: replace this stub with the real implementation */
+#define LOG(level, fmt, ...) do { (void)(level); } while (0)
 
 /* ── Macro 9: ASSERT_EQ(a, b) ───────────────────────────────────
  * Test assertion that prints both values on failure.
@@ -106,7 +114,8 @@
  * Example: ASSERT_EQ(2+2, 5);
  * Output:  ASSERT_EQ failed: 2+2 != 5 (4 != 5) at macros.c:99
  */
-/* TODO: #define ASSERT_EQ(a, b) do { ... } while (0) */
+/* TODO: replace this stub with the real implementation */
+#define ASSERT_EQ(a, b) do { (void)(a); (void)(b); } while (0)
 
 /* ══════════════════════════════════════════════════════════════════
  *                         TEST HARNESS

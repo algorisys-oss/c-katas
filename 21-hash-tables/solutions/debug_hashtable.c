@@ -187,7 +187,8 @@ static const char *ht_get(hash_table_t *ht, const char *key)
 
 /* ── Delete ──────────────────────────────────────────────────────── */
 
-static int ht_delete(hash_table_t *ht, const char *key)
+/* Not used by tests, but included as part of the complete implementation */
+int ht_delete(hash_table_t *ht, const char *key)
 {
     unsigned int idx = hash(key, ht->capacity);
     while (ht->entries[idx].key != NULL) {

@@ -77,7 +77,20 @@ int tokenize(char *input, char **tokens, int max_tokens)
     int i;
     int len;
 
-    (void)max_tokens;
+    /* Helper macro: flush buf as a token if non-empty */
+    #define FLUSH_TOKEN() do { \
+        if (buf_len > 0 && count < max_tokens - 1) { \
+            buf[buf_len] = '\0'; \
+            tokens[count++] = strdup(buf); \
+            buf_len = 0; \
+        } \
+    } while (0)
+
+    #define EMIT_TOKEN(s) do { \
+        if (count < max_tokens - 1) { \
+            tokens[count++] = strdup(s); \
+        } \
+    } while (0)
 
     /* Step 1: Strip trailing newline */
     len = strlen(input);
@@ -93,67 +106,53 @@ int tokenize(char *input, char **tokens, int max_tokens)
 
         /* b) Inside quotes: everything is literal */
         if (in_quotes) {
-            buf[buf_len++] = input[i];
+            if (buf_len < MAX_TOKEN_LEN - 1)
+                buf[buf_len++] = input[i];
             continue;
         }
 
         /* c) Whitespace: finish current token */
         if (isspace((unsigned char)input[i])) {
-            if (buf_len > 0) {
-                buf[buf_len] = '\0';
-                tokens[count++] = strdup(buf);
-                buf_len = 0;
-            }
+            FLUSH_TOKEN();
             continue;
         }
 
         /* d) Pipe: finish current token, emit "|" */
         if (input[i] == '|') {
-            if (buf_len > 0) {
-                buf[buf_len] = '\0';
-                tokens[count++] = strdup(buf);
-                buf_len = 0;
-            }
-            tokens[count++] = strdup("|");
+            FLUSH_TOKEN();
+            EMIT_TOKEN("|");
             continue;
         }
 
         /* e) Output redirect: check for >> or > */
         if (input[i] == '>') {
-            if (buf_len > 0) {
-                buf[buf_len] = '\0';
-                tokens[count++] = strdup(buf);
-                buf_len = 0;
-            }
+            FLUSH_TOKEN();
             if (i + 1 < len && input[i + 1] == '>') {
-                tokens[count++] = strdup(">>");
+                EMIT_TOKEN(">>");
                 i++; /* skip next '>' */
             } else {
-                tokens[count++] = strdup(">");
+                EMIT_TOKEN(">");
             }
             continue;
         }
 
         /* f) Input redirect: finish current token, emit "<" */
         if (input[i] == '<') {
-            if (buf_len > 0) {
-                buf[buf_len] = '\0';
-                tokens[count++] = strdup(buf);
-                buf_len = 0;
-            }
-            tokens[count++] = strdup("<");
+            FLUSH_TOKEN();
+            EMIT_TOKEN("<");
             continue;
         }
 
         /* g) Regular character: append to buffer */
-        buf[buf_len++] = input[i];
+        if (buf_len < MAX_TOKEN_LEN - 1)
+            buf[buf_len++] = input[i];
     }
 
     /* Step 3: Flush remaining token */
-    if (buf_len > 0) {
-        buf[buf_len] = '\0';
-        tokens[count++] = strdup(buf);
-    }
+    FLUSH_TOKEN();
+
+    #undef FLUSH_TOKEN
+    #undef EMIT_TOKEN
 
     /* Step 4: Null-terminate and return */
     tokens[count] = NULL;

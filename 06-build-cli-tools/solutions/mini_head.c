@@ -77,8 +77,7 @@ int head_string(const char *text, int max_lines,
     size_t text_len = strlen(text);
     if (text_len == 0) {
         result_buf[0] = '\0';
-        return head_stream(stdin, 0, stdout);
-        /* empty input special case: just return 0 */
+        return 0;
     }
 
     FILE *input = fmemopen((void *)text, text_len, "r");

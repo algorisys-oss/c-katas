@@ -53,7 +53,7 @@ typedef struct {
  */
 GapBuffer gap_create(int capacity)
 {
-    GapBuffer gb;
+    GapBuffer gb = {0};
     (void)capacity;
     /* TODO: allocate gb.buf with malloc, set buf_size, gap_start, gap_end */
     return gb;

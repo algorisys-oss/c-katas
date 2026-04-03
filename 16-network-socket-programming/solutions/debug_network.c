@@ -124,7 +124,7 @@ int extract_http_body(const char *response, char *out_body, int out_size)
     if (!cl) return -1;
 
     int content_length = atoi(cl + strlen("Content-Length: "));
-    if (content_length <= 0 || content_length > out_size) return -1;
+    if (content_length <= 0 || content_length >= out_size) return -1;
 
     const char *body = strstr(response, "\r\n\r\n");
     if (!body) return -1;

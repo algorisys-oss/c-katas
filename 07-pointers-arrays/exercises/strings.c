@@ -28,6 +28,7 @@
  *
  * Hint: Walk forward from s[0] until you hit '\0', counting steps.
  */
+/* Note: real strlen() returns size_t, but we use int for simplicity here. */
 int my_strlen(const char *s)
 {
     /* TODO: Count characters until '\0' */

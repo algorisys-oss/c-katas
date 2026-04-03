@@ -35,7 +35,7 @@
 
 int main(void)
 {
-    double a, b, result;
+    double a, b, result = 0.0;
     char op;
 
     printf("Enter first number: ");

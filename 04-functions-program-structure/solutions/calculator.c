@@ -7,17 +7,17 @@ double divide(double a, double b);
 
 int main(void)
 {
-    double a, b, result;
-    char op;
+    double a = 0.0, b = 0.0, result = 0.0;
+    char op = '+';
 
     printf("Enter first number: ");
-    scanf("%lf", &a);
+    if (scanf("%lf", &a) != 1) { fprintf(stderr, "Invalid number\n"); return 1; }
 
     printf("Enter operator (+, -, *, /): ");
-    scanf(" %c", &op);
+    if (scanf(" %c", &op) != 1) { fprintf(stderr, "Invalid operator\n"); return 1; }
 
     printf("Enter second number: ");
-    scanf("%lf", &b);
+    if (scanf("%lf", &b) != 1) { fprintf(stderr, "Invalid number\n"); return 1; }
 
     switch (op) {
         case '+':

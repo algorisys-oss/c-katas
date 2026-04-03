@@ -101,7 +101,7 @@ int parse_request_line(const char *raw, char *method, char *path, char *version)
     if (raw == NULL) {
         return -1;
     }
-    int matched = sscanf(raw, "%s %s %s", method, path, version);
+    int matched = sscanf(raw, "%15s %1023s %15s", method, path, version);
     if (matched != 3) {
         return -1;
     }
