@@ -664,11 +664,147 @@ time**.
 
 ---
 
+## Advanced Graph Algorithms
+
+### Dijkstra's Algorithm — Shortest Path with Weights
+
+BFS finds the shortest path when every edge has the same cost. But what about
+weighted edges — roads with different distances, networks with different latencies?
+
+**Why BFS fails with weights:** BFS explores level by level (fewest edges first).
+But fewer edges doesn't mean lower weight. A 2-edge path with weights 1+1=2 beats
+a 1-edge path with weight 10.
+
+**Dijkstra's insight:** Always process the **closest unvisited** vertex. Think of it
+like a wavefront expanding outward — but it moves faster along lighter edges:
+
+```
+Step-by-step with distance table:
+
+Graph: 0──4──1──1──4        dist[]        visited
+       │       │       │
+       2       8       6      Step 0: [0,  ∞,  ∞,  ∞,  ∞]   {  }
+       │       │       │      Visit 0: [0,  4,  2,  ∞,  ∞]   {0}
+       2──7──3──5──/          Visit 2: [0,  4,  2,  9,  ∞]   {0,2}
+                              Visit 1: [0,  4,  2,  9,  5]   {0,1,2}
+Wavefront expanding:          Visit 4: [0,  4,  2,  9,  5]   {0,1,2,4}
+  ~~~0~~~ → ~~~2~~~ (fast)    Visit 3: [0,  4,  2,  9,  5]   {0,1,2,3,4}
+  ~~~~0~~~~ → ~~~~1~~~~ (slow)
+
+The wavefront reaches 2 before 1 because edge 0→2 (weight 2) is lighter
+than edge 0→1 (weight 4).
+```
+
+**Why it's greedy:** Once you mark a vertex as visited, its distance is final. This
+works because all edge weights are non-negative — no future path through unvisited
+vertices can be shorter than going directly.
+
+**Limitation:** Fails with negative weights. If an edge has weight -10, a longer
+path through it could beat a shorter path — violating the greedy assumption.
+
+**Complexity:** O(V^2) with adjacency matrix (our approach). O((V+E) log V) with a
+priority queue (min-heap) — important for sparse graphs.
+
+### Bellman-Ford Algorithm — Handling Negative Weights
+
+When edges can be negative, Dijkstra's greedy approach breaks. Bellman-Ford takes
+a different, more cautious approach: **relax every edge, V-1 times**.
+
+**Why V-1?** The shortest path between any two vertices has at most V-1 edges (otherwise
+it would visit a vertex twice). Each round of relaxation "propagates" shortest path
+information one edge further. After V-1 rounds, even the longest shortest path is found.
+
+```
+"Relax" an edge u→v with weight w:
+  if dist[u] + w < dist[v]:
+      dist[v] = dist[u] + w      ← found a shorter path through u
+
+Round 1: paths of length 1 are correct
+Round 2: paths of length 2 are correct
+  ...
+Round V-1: all paths are correct
+```
+
+**Negative cycle detection:** After V-1 rounds, try one more. If any edge can still be
+relaxed, distances are still decreasing — meaning there's a cycle whose total weight
+is negative. Traversing it repeatedly makes the path infinitely short.
+
+| Feature           | Dijkstra            | Bellman-Ford        |
+|-------------------|---------------------|---------------------|
+| Negative weights  | Cannot handle       | Handles correctly   |
+| Negative cycles   | Cannot detect       | Detects them        |
+| Complexity        | O(V^2) or O((V+E) log V) | O(V * E)     |
+| Approach          | Greedy              | Dynamic programming |
+| When to use       | Non-negative weights| Negative weights    |
+
+### Kruskal's MST — Minimum Spanning Tree
+
+A **spanning tree** of a graph connects all V vertices using exactly V-1 edges with
+no cycles. A **minimum** spanning tree (MST) does this with the lowest total edge
+weight. Think of it as the cheapest way to wire all buildings in a city.
+
+**Kruskal's greedy insight:** Always take the **cheapest available edge** that doesn't
+create a cycle. Union-Find makes the cycle check nearly instant.
+
+```
+Step-by-step example:
+
+Sorted edges: (1,4,w=1) (0,2,w=2) (0,1,w=4) (3,4,w=5) (2,3,w=7) (1,3,w=8)
+
+Take (1,4,1): components {0} {1,4} {2} {3}     ← different sets, take it
+Take (0,2,2): components {0,2} {1,4} {3}       ← different sets, take it
+Take (0,1,4): components {0,1,2,4} {3}         ← different sets, take it
+Take (3,4,5): components {0,1,2,3,4}           ← different sets, take it
+DONE: 4 edges = V-1
+
+MST total weight: 1 + 2 + 4 + 5 = 12
+
+Original:        MST:
+0──4──1──1──4    0──4──1──1──4
+│               │           │
+2               2           │
+│               │           │
+2     3──5──/   2     3──5──/
+      └7──2           (skip: would create cycle)
+```
+
+### Cycle Detection
+
+**Directed graphs — Three-color DFS:**
+
+In a directed graph, cycles are detected by tracking the state of each vertex during
+DFS using three colors:
+
+```
+WHITE (0) = not yet visited
+GRAY  (1) = currently being explored (on the recursion stack)
+BLACK (2) = completely finished (all descendants explored)
+
+If DFS visits a GRAY vertex → back edge → CYCLE!
+
+A ──→ B ──→ C       DFS: A(gray) → B(gray) → C(gray)
+↑           │              C sees A is GRAY → CYCLE!
+└───────────┘
+```
+
+**Undirected graphs — Union-Find:**
+
+For undirected graphs, Union-Find is simpler. Process each edge: if both endpoints
+are already in the same connected component, this edge creates a cycle.
+
+Why use different methods? In undirected graphs, every edge u-v creates paths in both
+directions. Three-color DFS would see u's neighbor v (which it just came from) as a
+"back edge" — but it's not a real cycle, just the parent edge. You'd need extra parent
+tracking. Union-Find avoids this problem entirely.
+
+---
+
 ## Exercises
 
 | File               | Concepts                                    | Tests |
 |--------------------|----------------------------------------------|-------|
 | `graph.c`          | Adjacency list, BFS, DFS, shortest path      | 15    |
+| `graph_advanced.c` | Dijkstra, Bellman-Ford, Kruskal MST, cycle detection | 20 |
 | `maze.c`           | BFS maze solver, path reconstruction         | 8     |
 | `topo_sort.c`      | Topological sort (Kahn's), cycle detect      | 10    |
 | `grid_problems.c`  | Islands (DFS), rotten oranges (multi-source BFS), grid shortest path | 14 |

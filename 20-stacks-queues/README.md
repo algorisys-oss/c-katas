@@ -415,6 +415,119 @@ nesting, and stacks are the tool for handling nesting.
 
 ---
 
+## Data Structure Design Problems
+
+The interview pattern: "Design a data structure that supports operation X in
+O(1) time." The trick is always the same — combine simpler data structures
+to get better complexity than any single structure could achieve alone.
+
+### Min Stack — Parallel Tracking
+
+A stack that supports `push`, `pop`, `top`, and `getMin` — all in O(1).
+
+The trick: maintain a **parallel stack** that tracks the minimum at each
+level. When you push, also push `min(new_value, current_min)`. When you
+pop, pop from both.
+
+```
+    Operation    Main stack       Min stack        getMin
+    ─────────    ──────────       ─────────        ──────
+    push(5)      [5]              [5]              5
+    push(3)      [5, 3]           [5, 3]           3
+    push(7)      [5, 3, 7]        [5, 3, 3]        3
+    push(2)      [5, 3, 7, 2]     [5, 3, 3, 2]     2
+    pop()        [5, 3, 7]        [5, 3, 3]        3   ← min "un-updates"
+    pop()        [5, 3]           [5, 3]           3
+    pop()        [5]              [5]              5
+
+    Key: min_stack[i] always holds min(main_stack[0..i])
+```
+
+### Queue from Two Stacks — The Reversal Trick
+
+A stack is LIFO (last in, first out). A queue is FIFO (first in, first out).
+Two LIFOs composed together give FIFO: the second stack reverses the order
+of the first!
+
+```
+    Enqueue 1, 2, 3:
+      input:  [1, 2, 3]    output: []
+
+    Dequeue (output empty → pour input into output):
+      input:  []            output: [3, 2, 1]
+      Pop from output → returns 1 (FIFO!)
+
+    Visually:
+
+      input:          pour          output:
+      ┌───┐                         ┌───┐
+      │ 3 │ ──────────────────────→ │ 1 │ ← oldest (first to dequeue)
+      │ 2 │ ──────────────────────→ │ 2 │
+      │ 1 │ ──────────────────────→ │ 3 │
+      └───┘                         └───┘
+```
+
+**Amortized O(1):** Each element moves at most twice — once into the input
+stack, once into the output stack. Over n operations, that's 2n moves total,
+so O(1) per operation amortized.
+
+### Circular Deque — Modular Arithmetic
+
+A double-ended queue (deque) supports insert/delete at both front and back.
+Using a circular array, all operations are O(1):
+
+```
+    capacity=5, data = [_, _, _, _, _]
+
+    insertRear(1):  front=0, rear=1 → [1, _, _, _, _]
+    insertRear(2):  front=0, rear=2 → [1, 2, _, _, _]
+    insertFront(0): front=4, rear=2 → [1, 2, _, _, 0]
+
+        indices:  0   1   2   3   4
+        data:   [ 1 | 2 | _ | _ | 0 ]
+                                  ↑
+                                front (wrapped around!)
+
+    The wrap-around formula:
+      insertFront: front = (front - 1 + capacity) % capacity
+      insertRear:  rear  = (rear + 1) % capacity
+```
+
+### Nested Iterator — Stack-Based Flattening
+
+Given a nested list like `[1, [2, [3]], 4]`, flatten it to `1, 2, 3, 4`
+without recursion. Use a stack to track your position at each nesting level:
+
+```
+    Stack: [(top_list, index=0)]
+
+    has_next: item[0]=1 (integer) → ready!
+    next: return 1, advance index → [(top_list, index=1)]
+
+    has_next: item[1]=[2,[3]] (list) → push it!
+              Stack: [(top_list, index=2), (inner_list, index=0)]
+              item[0]=2 (integer) → ready!
+    next: return 2, advance → [(top_list, index=2), (inner_list, index=1)]
+
+    has_next: item[1]=[3] (list) → push it!
+              Stack: [(top_list, index=2), (inner_list, index=2), ([3], index=0)]
+              item[0]=3 (integer) → ready!
+    next: return 3, advance → index exhausted → pop → pop
+          Stack: [(top_list, index=2)]
+
+    has_next: item[2]=4 (integer) → ready!
+    next: return 4
+```
+
+### Design Problem Strategy
+
+1. Identify which operations need to be O(1)
+2. Pick data structures that provide O(1) for those operations
+3. Combine them — use auxiliary structures to track extra information
+4. Verify: does every operation still work in the target time?
+
+---
+
 ## Exercises
 
 | # | File                 | What You'll Build                                | Tests |
@@ -424,6 +537,7 @@ nesting, and stacks are the tool for handling nesting.
 | 3 | `expression_eval.c`  | Infix → postfix converter + postfix evaluator    | 8     |
 | 4 | `monotonic_stack.c`  | Next greater element, daily temps, histogram     | 13    |
 | 5 | `decode_string.c`    | Decode nested encoded strings using a stack      | 6     |
+| 6 | `design_problems.c`  | Min stack, queue from stacks, deque, nested iter | 20    |
 
 Build with `make exercises` and test solutions with `make test`.
 

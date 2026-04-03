@@ -918,6 +918,197 @@ Start at 3: tank = 0
 
 ---
 
+## Matrix Patterns
+
+Classic 2D array manipulation problems that appear constantly in interviews.
+The key insight for most matrix problems: find a clever traversal order
+or an in-place transformation trick.
+
+### Spiral Traversal — The Four-Boundary Approach
+
+Walk around the matrix in a spiral using four boundaries that shrink inward:
+
+```
+    top=0
+    ┌──────────────────────┐
+    │  1 → 2 → 3 → 4 → 5  │  Sweep right along top row, then top++
+    │                   ↓  │
+    │  16  17  18  19   6  │  Sweep down along right col, then right--
+    │  ↑               ↓  │
+    │  15  24  25  20   7  │
+    │  ↑               ↓  │
+    │  14  23  22  21   8  │  Sweep left along bottom row, then bottom--
+    │  ↑                   │
+    │  13 ← 12 ← 11 ← 10 ← 9  │  Sweep up along left col, then left++
+    └──────────────────────┘
+    left=0             right=4
+                       bottom=4
+
+    Repeat until boundaries cross.
+```
+
+### Rotate 90 — The Transpose-Then-Reverse Trick
+
+Why does transpose + reverse-rows = 90-degree clockwise rotation?
+
+```
+    Original:       Transpose:         Reverse rows:
+    1 2 3           1 4 7              7 4 1
+    4 5 6     →     2 5 8       →      8 5 2
+    7 8 9           3 6 9              9 6 3
+
+    Transpose mirrors across the main diagonal (\).
+    Reversing rows mirrors left-to-right (|).
+    Composing \ then | = 90° clockwise rotation!
+```
+
+Geometrically: reflecting across the diagonal swaps (row, col) positions,
+then reflecting horizontally puts everything in the right spot for a
+clockwise rotation. Two reflections whose axes are 45° apart always
+produce a 90° rotation.
+
+### Set Zeroes — Using First Row/Column as Markers
+
+The naive approach uses O(m+n) extra space to track which rows/columns
+need zeroing. The clever approach uses the first row and first column
+of the matrix itself as markers — O(1) extra space.
+
+```
+    Step 1: Save whether first row/col have zeros (two booleans)
+    Step 2: Scan rest of matrix — if [i][j]==0, mark [i][0]=0 and [0][j]=0
+    Step 3: Use markers to zero out rows and columns
+    Step 4: Zero first row/col if needed (using saved booleans)
+
+    Original:        After marking:      After zeroing:
+    0  1  2  0       0  0  2  0          0  0  0  0
+    3  4  5  2   →   0  4  5  2    →     0  4  5  0
+    1  3  1  5       1  3  1  5          0  3  1  0
+```
+
+### Sorted Matrix Search — The Staircase from Top-Right
+
+When every row and every column is sorted, start at the **top-right corner**.
+Each comparison eliminates an entire row or column:
+
+```
+    1   4   7  [11]     11 > 5 → go LEFT (eliminate column)
+    2   5   8   12
+    3   6   9   16
+   10  13  14   17
+
+    1   4  [7]  11      7 > 5 → go LEFT
+    2   5   8   12
+    3   6   9   16
+   10  13  14   17
+
+    1  [4]  7   11      4 < 5 → go DOWN (eliminate row)
+    2   5   8   12
+    3   6   9   16
+   10  13  14   17
+
+    1   4   7   11
+    2  [5]  8   12      5 == 5 → FOUND at (1,1)
+    3   6   9   16
+   10  13  14   17
+
+    Time: O(m + n) — at most m + n steps
+```
+
+---
+
+## String Matching Algorithms
+
+Given a text of length n and a pattern of length m, find where the pattern
+occurs in the text. This is one of the most fundamental problems in CS.
+
+### Brute Force — Why O(n * m) Hurts
+
+For each position in the text, compare every character of the pattern:
+
+```
+    Text:    "AAAAAAAAB"
+    Pattern: "AAAB"
+
+    Position 0: AAAA vs AAAB → match,match,match,FAIL (3 wasted comparisons!)
+    Position 1:  AAAA vs AAAB → match,match,match,FAIL
+    Position 2:   AAAA vs AAAB → match,match,match,FAIL
+    ...
+    Position 5:      AAAB vs AAAB → MATCH!
+
+    Each attempt does m comparisons before failing. That's O(n * m).
+```
+
+### KMP — The Prefix Function Insight
+
+The key insight: when a mismatch occurs, we've already matched some characters.
+If the matched portion has a **prefix that's also a suffix**, we can skip ahead
+instead of starting over.
+
+**Building the prefix table:**
+
+```
+    Pattern: "ABABAC"
+    Index:    0 1 2 3 4 5
+
+    j=0: "A"      → no proper prefix = suffix           → table[0] = 0
+    j=1: "AB"     → "A" ≠ "B"                           → table[1] = 0
+    j=2: "ABA"    → prefix "A" == suffix "A"             → table[2] = 1
+    j=3: "ABAB"   → prefix "AB" == suffix "AB"           → table[3] = 2
+    j=4: "ABABA"  → prefix "ABA" == suffix "ABA"         → table[4] = 3
+    j=5: "ABABAC" → no prefix matches suffix ending in C → table[5] = 0
+
+    Result: [0, 0, 1, 2, 3, 0]
+```
+
+**Using the table for search:**
+
+```
+    Text:    "ABABABACABC"
+    Pattern: "ABABAC"
+    Table:   [0, 0, 1, 2, 3, 0]
+
+    i=0: A==A, i=1: B==B, i=2: A==A, i=3: B==B, i=4: A==A
+    i=5: B≠C → mismatch at j=5, table[4]=3, so j jumps to 3
+         (we know "ABA" already matches — don't re-check it!)
+    i=5: B==B, i=6: A==A, i=7: C==C → j==6 → MATCH at position 2!
+```
+
+**Why O(n + m):** each character of the text is visited at most twice (once
+by advancing i, once by the prefix table fallback). We never go backwards
+in the text!
+
+### Rabin-Karp — The Rolling Hash Trick
+
+Instead of comparing characters, compare **hashes**. If the hash doesn't
+match, the strings definitely don't match (skip immediately). If the hash
+does match, verify character by character (hash collisions are possible).
+
+```
+    Hash function: hash = (c0 * 256^(m-1) + c1 * 256^(m-2) + ... + c_{m-1}) % prime
+
+    Rolling update when sliding from "ABC" to "BCD":
+
+    hash("BCD") = (hash("ABC") - 'A' * 256^2) * 256 + 'D') % prime
+                   ─────────────────────────   ─────   ───
+                   remove leftmost character    shift   add new character
+
+    This update is O(1) — no need to rehash the entire window!
+```
+
+**Spurious hits:** When hashes match but strings don't (hash collision),
+we must verify with character comparison. With a good prime, this is rare,
+giving O(n + m) average time.
+
+### Algorithm Comparison
+
+| Algorithm | Time | Space | Best For |
+|-----------|------|-------|----------|
+| Brute force | O(nm) | O(1) | Short patterns |
+| KMP | O(n+m) | O(m) | Single pattern, guaranteed |
+| Rabin-Karp | O(n+m) avg | O(1) | Multiple patterns |
+
+---
+
 ## Exercises
 
 | # | File | Topic | Tests |
@@ -930,8 +1121,10 @@ Start at 3: tank = 0
 | 6 | **exercises/string_problems.c** | Reverse words, pangrams, IPv6 validation | 14 |
 | 7 | **exercises/modified_binary_search.c** | Rotated array, peak, 2D matrix, first/last | 17 |
 | 8 | **exercises/greedy.c** | Activity selection, jump game, task scheduler, gas station | 19 |
+| 9 | **exercises/matrix_patterns.c** | Spiral order, rotate, set zeroes, sorted search, transpose | 17 |
+| 10 | **exercises/string_matching.c** | Brute force, KMP, Rabin-Karp string matching | 14 |
 
-**Total: 118 tests across 8 exercise files.**
+**Total: 149 tests across 10 exercise files.**
 
 ---
 

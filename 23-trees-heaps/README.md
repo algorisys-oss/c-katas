@@ -1116,6 +1116,85 @@ than the other, move its root to the other heap.
 
 ---
 
+## Binary Tree Interview Patterns
+
+Beyond basic traversals, these patterns appear constantly in technical interviews.
+
+### Height vs Depth
+
+**Height** is measured bottom-up: the distance from a node to its deepest leaf.
+**Depth** is measured top-down: the distance from the root to a node.
+The height of the tree = the depth of its deepest leaf.
+
+### Diameter — The "Global Variable" Trick
+
+The diameter is the longest path between any two nodes (measured in edges).
+The key insight: the longest path through any node is `left_height + right_height`.
+Use a helper that computes height but also tracks the maximum diameter seen:
+
+```
+  int diameter_helper(TreeNode *root, int *max_diameter) {
+      // returns height, but updates *max_diameter as a side effect
+      int left_h = diameter_helper(root->left, max_diameter);
+      int right_h = diameter_helper(root->right, max_diameter);
+      *max_diameter = max(*max_diameter, left_h + right_h);
+      return 1 + max(left_h, right_h);
+  }
+```
+
+### Lowest Common Ancestor — The Elegant Recursive Solution
+
+```
+  Search left, search right:
+  - Both found   -> current node is the LCA
+  - Only left    -> LCA is in left subtree
+  - Only right   -> LCA is in right subtree
+  - Neither      -> neither p nor q is in this subtree
+```
+
+Why it works: if p and q are in different subtrees of a node, that node MUST
+be their LCA. If they're in the same subtree, the recursion finds the LCA deeper.
+
+### Level-Order BFS — Using a Queue
+
+Process one level at a time by recording the queue size before dequeuing:
+
+```
+  while queue not empty:
+      level_size = queue.size
+      for i in 0..level_size-1:
+          node = dequeue
+          process(node)
+          if node->left: enqueue(node->left)
+          if node->right: enqueue(node->right)
+```
+
+### Right Side View
+
+Just the LAST element of each BFS level. Process all nodes in a level,
+but only record the final one.
+
+### Zigzag Level Order
+
+Normal BFS, but reverse every odd-numbered level before storing it.
+
+### Serialization — Preorder with NULL Markers
+
+A preorder traversal with explicit "null" markers is sufficient to uniquely
+reconstruct any binary tree. The key: "null" markers encode the STRUCTURE
+(which children are missing), not just the values.
+
+```
+       1
+      / \
+     2   3  =>  "1,2,null,null,3,null,null"
+```
+
+To deserialize: read tokens left to right, recursively build left child
+then right child. "null" tokens become NULL leaves.
+
+---
+
 ## Exercises
 
 1. **`bst.c`** — Implement a binary search tree with insert, search, delete,
@@ -1142,6 +1221,9 @@ than the other, move its root to the other heap.
 
 8. **`top_k.c`** — Top-K frequent elements, kth largest, merge K sorted
    arrays, and median of a stream using heaps. ~15 tests.
+
+9. **`tree_patterns.c`** — Classic binary tree interview patterns: height,
+   diameter, LCA, right side view, zigzag traversal, serialization. ~20 tests.
 
 ---
 

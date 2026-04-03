@@ -3,10 +3,13 @@ CFLAGS = -Wall -Wextra -pedantic -std=c99
 
 # --- Exercise targets ---
 
-exercises: graph maze topo_sort grid_problems union_find
+exercises: graph graph_advanced maze topo_sort grid_problems union_find
 
 graph: exercises/graph.c
 	$(CC) $(CFLAGS) -o graph exercises/graph.c
+
+graph_advanced: exercises/graph_advanced.c
+	$(CC) $(CFLAGS) -o graph_advanced exercises/graph_advanced.c
 
 maze: exercises/maze.c
 	$(CC) $(CFLAGS) -o maze exercises/maze.c
@@ -22,10 +25,13 @@ union_find: exercises/union_find.c
 
 # --- Solution targets (prefix with sol-) ---
 
-solutions: sol-graph sol-maze sol-topo_sort sol-grid_problems sol-union_find
+solutions: sol-graph sol-graph_advanced sol-maze sol-topo_sort sol-grid_problems sol-union_find
 
 sol-graph: solutions/graph.c
 	$(CC) $(CFLAGS) -o sol-graph solutions/graph.c
+
+sol-graph_advanced: solutions/graph_advanced.c
+	$(CC) $(CFLAGS) -o sol-graph_advanced solutions/graph_advanced.c
 
 sol-maze: solutions/maze.c
 	$(CC) $(CFLAGS) -o sol-maze solutions/maze.c
@@ -45,6 +51,9 @@ test: solutions
 	@echo "--- Graphs ---"
 	./sol-graph
 	@echo ""
+	@echo "--- Advanced Graphs ---"
+	./sol-graph_advanced
+	@echo ""
 	@echo "--- Maze Solver ---"
 	./sol-maze
 	@echo ""
@@ -62,7 +71,7 @@ test: solutions
 # --- Clean up ---
 
 clean:
-	rm -f graph maze topo_sort grid_problems union_find
-	rm -f sol-graph sol-maze sol-topo_sort sol-grid_problems sol-union_find
+	rm -f graph graph_advanced maze topo_sort grid_problems union_find
+	rm -f sol-graph sol-graph_advanced sol-maze sol-topo_sort sol-grid_problems sol-union_find
 
 .PHONY: exercises solutions test clean

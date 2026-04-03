@@ -3,7 +3,7 @@ CFLAGS = -Wall -Wextra -pedantic -std=c99
 
 # --- Exercise targets ---
 
-exercises: bst heap prefix_sums bit_tricks segment_tree fenwick_tree trie top_k
+exercises: bst heap prefix_sums bit_tricks segment_tree fenwick_tree trie top_k tree_patterns
 
 bst: exercises/bst.c
 	$(CC) $(CFLAGS) -o bst exercises/bst.c
@@ -29,9 +29,12 @@ trie: exercises/trie.c
 top_k: exercises/top_k.c
 	$(CC) $(CFLAGS) -o top_k exercises/top_k.c
 
+tree_patterns: exercises/tree_patterns.c
+	$(CC) $(CFLAGS) -o tree_patterns exercises/tree_patterns.c
+
 # --- Solution targets (prefix with sol-) ---
 
-solutions: sol-bst sol-heap sol-prefix_sums sol-bit_tricks sol-segment_tree sol-fenwick_tree sol-trie sol-top_k
+solutions: sol-bst sol-heap sol-prefix_sums sol-bit_tricks sol-segment_tree sol-fenwick_tree sol-trie sol-top_k sol-tree_patterns
 
 sol-bst: solutions/bst.c
 	$(CC) $(CFLAGS) -o sol-bst solutions/bst.c
@@ -56,6 +59,9 @@ sol-trie: solutions/trie.c
 
 sol-top_k: solutions/top_k.c
 	$(CC) $(CFLAGS) -o sol-top_k solutions/top_k.c
+
+sol-tree_patterns: solutions/tree_patterns.c
+	$(CC) $(CFLAGS) -o sol-tree_patterns solutions/tree_patterns.c
 
 # --- Test: build and run solutions to verify correctness ---
 
@@ -84,6 +90,9 @@ test: solutions
 	@echo "--- Top-K & K-Way Merge ---"
 	./sol-top_k
 	@echo ""
+	@echo "--- Binary Tree Interview Patterns ---"
+	./sol-tree_patterns
+	@echo ""
 	@echo "All solution tests complete."
 
 # --- Debug exercise targets ---
@@ -97,8 +106,8 @@ debug-solution: solutions/debug_bst.c
 # --- Clean up ---
 
 clean:
-	rm -f bst heap prefix_sums bit_tricks segment_tree fenwick_tree trie top_k
-	rm -f sol-bst sol-heap sol-prefix_sums sol-bit_tricks sol-segment_tree sol-fenwick_tree sol-trie sol-top_k
+	rm -f bst heap prefix_sums bit_tricks segment_tree fenwick_tree trie top_k tree_patterns
+	rm -f sol-bst sol-heap sol-prefix_sums sol-bit_tricks sol-segment_tree sol-fenwick_tree sol-trie sol-top_k sol-tree_patterns
 	rm -f exercises/debug_bst solutions/debug_bst
 
 .PHONY: exercises solutions test clean debug debug-solution

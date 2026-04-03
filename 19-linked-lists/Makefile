@@ -3,7 +3,7 @@ CFLAGS = -Wall -Wextra -pedantic -std=c99
 
 # --- Exercise targets ---
 
-exercises: linked_list lru_cache list_intersection
+exercises: linked_list lru_cache list_intersection linked_list_advanced
 
 linked_list: exercises/linked_list.c
 	$(CC) $(CFLAGS) -o linked_list exercises/linked_list.c
@@ -14,9 +14,12 @@ lru_cache: exercises/lru_cache.c
 list_intersection: exercises/list_intersection.c
 	$(CC) $(CFLAGS) -o list_intersection exercises/list_intersection.c
 
+linked_list_advanced: exercises/linked_list_advanced.c
+	$(CC) $(CFLAGS) -o linked_list_advanced exercises/linked_list_advanced.c
+
 # --- Solution targets (prefix with sol-) ---
 
-solutions: sol-linked_list sol-lru_cache sol-list_intersection
+solutions: sol-linked_list sol-lru_cache sol-list_intersection sol-linked_list_advanced
 
 sol-linked_list: solutions/linked_list.c
 	$(CC) $(CFLAGS) -o sol-linked_list solutions/linked_list.c
@@ -26,6 +29,9 @@ sol-lru_cache: solutions/lru_cache.c
 
 sol-list_intersection: solutions/list_intersection.c
 	$(CC) $(CFLAGS) -o sol-list_intersection solutions/list_intersection.c
+
+sol-linked_list_advanced: solutions/linked_list_advanced.c
+	$(CC) $(CFLAGS) -o sol-linked_list_advanced solutions/linked_list_advanced.c
 
 # --- Test: build and run solutions to verify correctness ---
 
@@ -38,6 +44,9 @@ test: solutions
 	@echo ""
 	@echo "--- List Intersection ---"
 	./sol-list_intersection
+	@echo ""
+	@echo "--- Advanced Linked List Patterns ---"
+	./sol-linked_list_advanced
 	@echo ""
 	@echo "All solution tests complete."
 
@@ -52,8 +61,8 @@ debug-solution: solutions/debug_list.c
 # --- Clean up ---
 
 clean:
-	rm -f linked_list lru_cache list_intersection
-	rm -f sol-linked_list sol-lru_cache sol-list_intersection
+	rm -f linked_list lru_cache list_intersection linked_list_advanced
+	rm -f sol-linked_list sol-lru_cache sol-list_intersection sol-linked_list_advanced
 	rm -f exercises/debug_list solutions/debug_list
 
 .PHONY: exercises solutions test clean debug debug-solution

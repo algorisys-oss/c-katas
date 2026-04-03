@@ -502,6 +502,82 @@ If you reach NULL without a match, the lists don't intersect.
 
 ---
 
+## Advanced Linked List Patterns
+
+These are classic interview problems that build on the basic operations above.
+
+### Floyd's Cycle Detection — The Tortoise and Hare
+
+Use two pointers: slow moves 1 step, fast moves 2 steps. If there is a cycle,
+fast MUST eventually catch slow (pigeonhole principle — fast closes the gap by
+1 each step, so it laps slow inside the cycle).
+
+### Finding Where a Cycle Starts — The Distance Proof
+
+Once you detect a cycle (slow and fast meet), you can find WHERE it starts:
+
+```
+  Head ──a──> Cycle start ──b──> Meeting point
+                    ^                    |
+                    └────── c ───────────┘
+
+  When slow and fast meet:
+    slow traveled: a + b
+    fast traveled: a + b + (b + c) = a + 2b + c
+    fast = 2 * slow:  a + 2b + c = 2(a + b)
+    Simplify:  a = c
+
+  So: distance from head to cycle start (a) =
+      distance from meeting point to cycle start (c)
+```
+
+Reset one pointer to head, keep the other at the meeting point. Move both
+one step at a time — they meet at the cycle start.
+
+### Reverse In-Place — The Three-Pointer Technique
+
+```
+  prev=NULL   curr=1
+     |          |
+     v          v
+  [NULL]   [1]→[2]→[3]→NULL
+
+  Step 1: save next=2, point 1→NULL, advance prev=1, curr=2
+  Step 2: save next=3, point 2→1, advance prev=2, curr=3
+  Step 3: save next=NULL, point 3→2, advance prev=3, curr=NULL
+  Done! Return prev (3).  List: 3→2→1→NULL
+```
+
+### Reverse K-Group — Chunk by Chunk
+
+Check if k nodes remain. If yes, reverse exactly k nodes, then recursively
+process the rest. The original head of each group becomes the tail — connect
+it to the result of the recursive call.
+
+### Palindrome Check — Find Middle, Reverse Half, Compare
+
+1. Find the middle using slow/fast pointers
+2. Reverse the second half of the list
+3. Compare the first half with the reversed second half
+4. Restore the list (reverse back) — good practice
+
+### Complexity Table
+
+```
+┌─────────────────────────────┬────────────┬──────────┐
+│ Operation                   │    Time    │  Space   │
+├─────────────────────────────┼────────────┼──────────┤
+│ Detect cycle (Floyd's)      │    O(n)    │   O(1)   │
+│ Find cycle start            │    O(n)    │   O(1)   │
+│ Reverse list                │    O(n)    │   O(1)   │
+│ Reverse K-group             │    O(n)    │   O(n/k) │
+│ Merge two sorted            │   O(n+m)   │   O(1)   │
+│ Palindrome check            │    O(n)    │   O(1)   │
+└─────────────────────────────┴────────────┴──────────┘
+```
+
+---
+
 ## Exercises
 
 | # | File | Description |
@@ -509,6 +585,7 @@ If you reach NULL without a match, the lists don't intersect.
 | 1 | `exercises/linked_list.c` | Singly linked list library — 18 tests |
 | 2 | `exercises/lru_cache.c` | LRU cache with doubly linked list — 10 tests |
 | 3 | `exercises/list_intersection.c` | Y-shape intersection problem — 8 tests |
+| 4 | `exercises/linked_list_advanced.c` | Advanced patterns: cycles, reverse, merge, palindrome — 20 tests |
 
 ---
 

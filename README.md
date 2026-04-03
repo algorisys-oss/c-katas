@@ -1,6 +1,6 @@
 # C Katas — Systems Programming from First Principles
 
-**30 modules. 1000+ tests. From "what is a computer" to building a database, ray tracer, and neural network — all in C.**
+**30 modules. 1100+ tests. From "what is a computer" to building a database, ray tracer, and neural network — all in C.**
 
 A ground-up C99 systems programming curriculum designed for absolute beginners who want deep, intuitive understanding of how computers actually work. No prior programming experience required.
 
@@ -113,11 +113,11 @@ gcc -Wall -Wextra -pedantic -std=c99
 |---|--------|-------------|-----------|
 | 09 | Structs, Unions & Compound Types | Memory layout, padding, tagged unions, opaque types | 3 |
 | 10 | Function Pointers & Callbacks | qsort, dispatch tables, polymorphism in C | 3 |
-| 11 | Linked Lists | Singly/doubly linked, Y-shape intersection | 4 |
-| 12 | Stacks & Queues | LIFO/FIFO, circular buffer, expression eval, monotonic stack, decode string | 5 |
+| 11 | Linked Lists | Singly/doubly linked, Y-shape intersection, Floyd's cycle, reverse K-group, palindrome | 5 |
+| 12 | Stacks & Queues | LIFO/FIFO, monotonic stack, decode string, Min Stack, Queue from Stacks, deque | 6 |
 | 13 | Hash Tables | Hash functions, collisions, open addressing, two sum, LRU cache | 5 |
-| 14 | Sorting & Searching | Binary search, quicksort, mergesort, two pointers, sliding window, intervals, greedy | 8 |
-| 15 | Trees & Heaps | BST, AVL, heap, prefix sums, segment tree, Fenwick tree, trie, top-K | 9 |
+| 14 | Sorting & Searching | Binary search, two pointers, sliding window, intervals, greedy, matrix, KMP/Rabin-Karp | 10 |
+| 15 | Trees & Heaps | BST, AVL, heap, trie, segment/Fenwick tree, top-K, LCA, serialize/deserialize | 11 |
 
 ### Phase 4: Systems Building Blocks (Modules 16–21)
 | # | Module | Key Concepts | Exercises |
@@ -126,7 +126,7 @@ gcc -Wall -Wextra -pedantic -std=c99
 | 17 | Text, Unicode & Encoding | ASCII, UTF-8, encoding/decoding, validation | 3 |
 | 18 | Date & Time | Unix epoch, leap years, timezones, formatting | 1 |
 | 19 | Preprocessor & Build Systems | Macros, conditional compilation, Makefiles | 1 |
-| 20 | Graphs | BFS, DFS, Dijkstra, topological sort, islands, rotten oranges, union-find | 5 |
+| 20 | Graphs | BFS, DFS, Dijkstra, Bellman-Ford, Kruskal MST, union-find, cycle detection | 7 |
 | 21 | Processes & Concurrency | fork/exec, threads, mutexes, atomics, producer-consumer | 3 |
 
 ### Phase 5: Building Real Systems (Modules 22–28c)
