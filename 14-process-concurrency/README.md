@@ -824,4 +824,4 @@ make debug    # compile the buggy version
 
 ---
 
-[← Previous: Module 20 — Graphs](../20-graphs/README.md) | [Next: Module 22 — Building a Text Editor →](../22-building-text-editor/README.md)
+[← Previous: Module 20 — Graphs](../29-graphs/README.md) | [Next: Module 22 — Building a Text Editor →](../27-build-text-editor/README.md)

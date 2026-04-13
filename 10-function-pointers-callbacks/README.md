@@ -349,4 +349,4 @@ and function pointers for comparing them.
 
 ---
 
-[← Previous: Module 09 — Structs, Unions & Compound Types](../09-structs-unions-compound-types/README.md) | [Next: Module 11 — Linked Lists →](../11-linked-lists/README.md)
+[← Previous: Module 09 — Structs, Unions & Compound Types](../09-structs-unions-compound-types/README.md) | [Next: Module 11 — Linked Lists →](../19-linked-lists/README.md)

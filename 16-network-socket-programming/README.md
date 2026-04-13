@@ -826,4 +826,4 @@ make debug    # compile the buggy version
 
 ---
 
-[← Previous: Module 25: Parsing & the SQL Engine](../25-parsing-sql-engine/README.md) | [Next: Module 27: Encryption & Security →](../27-encryption-security/README.md)
+[← Previous: Module 25: Parsing & the SQL Engine](../25-build-parsing-sql-engine/README.md) | [Next: Module 27: Encryption & Security →](../32-encryption-security/README.md)

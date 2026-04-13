@@ -518,4 +518,4 @@ homogeneous coordinates), but that's a topic for a later module.
 
 ---
 
-[← Previous: Module 27: Encryption & Security](../27-encryption-security/README.md) | [Next: Module 28b — Image Manipulation & Effects →](../28b-image-manipulation-effects/README.md)
+[← Previous: Module 27: Encryption & Security](../32-encryption-security/README.md) | [Next: Module 28b — Image Manipulation & Effects →](../34-image-manipulation-effects/README.md)

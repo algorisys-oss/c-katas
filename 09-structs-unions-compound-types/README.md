@@ -443,4 +443,4 @@ make test         # build and run solutions to verify
 
 ---
 
-[← Previous: Module 08 — Mastering Memory Management](../08-mastering-memory-management/README.md) | [Next: Module 10 — Function Pointers & Callbacks →](../10-function-pointers-callbacks/README.md)
+[← Previous: Module 08 — Mastering Memory Management](../30-mastering-memory-management/README.md) | [Next: Module 10 — Function Pointers & Callbacks →](../10-function-pointers-callbacks/README.md)

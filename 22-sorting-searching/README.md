@@ -1128,4 +1128,4 @@ giving O(n + m) average time.
 
 ---
 
-[← Previous: Module 13 — Hash Tables](../13-hash-tables/README.md) | [Next: Module 15 — Trees & Heaps →](../15-trees-heaps/README.md)
+[← Previous: Module 13 — Hash Tables](../21-hash-tables/README.md) | [Next: Module 15 — Trees & Heaps →](../23-trees-heaps/README.md)

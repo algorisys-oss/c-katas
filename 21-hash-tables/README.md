@@ -510,4 +510,4 @@ Source: https://github.com/redis/redis/blob/unstable/src/dict.c
 
 ---
 
-[← Previous: Module 12: Stacks & Queues](../12-stacks-queues/README.md) | [Next: Module 14: Sorting & Searching →](../14-sorting-searching/README.md)
+[← Previous: Module 12: Stacks & Queues](../20-stacks-queues/README.md) | [Next: Module 14: Sorting & Searching →](../22-sorting-searching/README.md)

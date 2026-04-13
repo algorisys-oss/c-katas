@@ -461,4 +461,4 @@ make debug    # compile the buggy version
 
 ---
 
-[← Previous: Module 05 — Recursion & Algorithmic Thinking](../05-recursion-algorithmic-thinking/README.md) | [Next: Module 07 — Dynamic Memory →](../07-dynamic-memory/README.md)
+[← Previous: Module 05 — Recursion & Algorithmic Thinking](../18-recursion-algorithmic-thinking/README.md) | [Next: Module 07 — Dynamic Memory →](../08-dynamic-memory/README.md)

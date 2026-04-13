@@ -386,4 +386,4 @@ systems that need to guarantee data hasn't been tampered with.
 
 ---
 
-[← Previous: Module 22 — Building a Text Editor](../22-building-text-editor/README.md) | [Next: Module 24 — Database: Key-Value Store →](../24-database-key-value-store/README.md)
+[← Previous: Module 22 — Building a Text Editor](../27-build-text-editor/README.md) | [Next: Module 24 — Database: Key-Value Store →](../24-build-database/README.md)

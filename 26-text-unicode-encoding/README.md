@@ -383,4 +383,4 @@ Build a set of text analysis functions that work on ASCII characters
 
 ---
 
-[← Previous: Module 16: File I/O & the Unix Philosophy](../16-file-io-unix-philosophy/README.md) | [Next: Module 18: Date & Time →](../18-date-time/README.md)
+[← Previous: Module 16: File I/O & the Unix Philosophy](../13-file-io-unix-philosophy/README.md) | [Next: Module 18: Date & Time →](../36-date-time/README.md)

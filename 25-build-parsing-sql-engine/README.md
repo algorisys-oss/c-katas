@@ -237,4 +237,4 @@ make test         # build and run solutions to verify correctness
 
 ---
 
-[← Previous: Module 24 — Database: Key-Value Store](../24-database-key-value-store/README.md) | [Next: Module 26: Network & Socket Programming →](../26-network-socket-programming/README.md)
+[← Previous: Module 24 — Database: Key-Value Store](../24-build-database/README.md) | [Next: Module 26: Network & Socket Programming →](../16-network-socket-programming/README.md)

@@ -326,4 +326,4 @@ make test         # Build and run all solution tests
 
 ---
 
-[← Previous: Module 28b — Image Manipulation & Effects](../28b-image-manipulation-effects/README.md) | [Next: Module 29: Machine Learning in C →](../29-machine-learning-in-c/README.md)
+[← Previous: Module 28b — Image Manipulation & Effects](../34-image-manipulation-effects/README.md) | [Next: Module 29: Machine Learning in C →](../37-machine-learning-in-c/README.md)

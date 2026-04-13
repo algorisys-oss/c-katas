@@ -609,4 +609,4 @@ make debug    # compile the buggy version
 
 ---
 
-[← Previous: Module 10 — Function Pointers & Callbacks](../10-function-pointers-callbacks/README.md) | [Next: Module 12: Stacks & Queues →](../12-stacks-queues/README.md)
+[← Previous: Module 10 — Function Pointers & Callbacks](../10-function-pointers-callbacks/README.md) | [Next: Module 12: Stacks & Queues →](../20-stacks-queues/README.md)

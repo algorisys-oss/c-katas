@@ -432,4 +432,4 @@ All 14 tests should pass.
 
 ---
 
-[← Previous: Module 28: Graphics Programming](../28-graphics-programming/README.md) | [Next: Module 28c — Ray Tracing & 3D Graphics →](../28c-ray-tracing-3d-graphics/README.md)
+[← Previous: Module 28: Graphics Programming](../33-graphics-programming/README.md) | [Next: Module 28c — Ray Tracing & 3D Graphics →](../35-ray-tracing-3d-graphics/README.md)

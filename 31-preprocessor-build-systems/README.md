@@ -640,4 +640,4 @@ systems: a text editor, a database, a network server, and more.
 
 ---
 
-[← Previous: Module 18: Date & Time](../18-date-time/README.md) | [Next: Module 20 — Graphs →](../20-graphs/README.md)
+[← Previous: Module 18: Date & Time](../36-date-time/README.md) | [Next: Module 20 — Graphs →](../29-graphs/README.md)

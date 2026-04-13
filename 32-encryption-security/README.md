@@ -410,4 +410,4 @@ When you visit `https://example.com`, this happens:
 
 ---
 
-[← Previous: Module 26: Network & Socket Programming](../26-network-socket-programming/README.md) | [Next: Module 28: Graphics Programming →](../28-graphics-programming/README.md)
+[← Previous: Module 26: Network & Socket Programming](../16-network-socket-programming/README.md) | [Next: Module 28: Graphics Programming →](../33-graphics-programming/README.md)

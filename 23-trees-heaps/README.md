@@ -1247,4 +1247,4 @@ make debug    # compile the buggy version
 
 ---
 
-[← Previous: Module 14: Sorting & Searching](../14-sorting-searching/README.md) | [Next: Module 16: File I/O & the Unix Philosophy →](../16-file-io-unix-philosophy/README.md)
+[← Previous: Module 14: Sorting & Searching](../22-sorting-searching/README.md) | [Next: Module 16: File I/O & the Unix Philosophy →](../13-file-io-unix-philosophy/README.md)

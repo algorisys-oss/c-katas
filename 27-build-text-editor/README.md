@@ -425,4 +425,4 @@ Source: https://github.com/antirez/kilo
 
 ---
 
-[← Previous: Module 21: Processes & Concurrency](../21-process-concurrency/README.md) | [Next: Module 23: Git Internals →](../23-git-internals/README.md)
+[← Previous: Module 21: Processes & Concurrency](../14-process-concurrency/README.md) | [Next: Module 23: Git Internals →](../28-git-internals/README.md)

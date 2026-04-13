@@ -543,4 +543,4 @@ Build with `make exercises` and test solutions with `make test`.
 
 ---
 
-[← Previous: Module 11 — Linked Lists](../11-linked-lists/README.md) | [Next: Module 13 — Hash Tables →](../13-hash-tables/README.md)
+[← Previous: Module 11 — Linked Lists](../19-linked-lists/README.md) | [Next: Module 13 — Hash Tables →](../21-hash-tables/README.md)

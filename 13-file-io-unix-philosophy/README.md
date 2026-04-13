@@ -642,4 +642,4 @@ searches or processes files in a directory tree uses this same pattern.
 
 ---
 
-[← Previous: Module 15 — Trees & Heaps](../15-trees-heaps/README.md) | [Next: Module 17 — Text, Unicode & Encoding →](../17-text-unicode-encoding/README.md)
+[← Previous: Module 15 — Trees & Heaps](../23-trees-heaps/README.md) | [Next: Module 17 — Text, Unicode & Encoding →](../26-text-unicode-encoding/README.md)

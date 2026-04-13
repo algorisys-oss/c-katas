@@ -460,4 +460,4 @@ Source: https://github.com/sqlite/sqlite/blob/master/src/btree.c
 
 ---
 
-[← Previous: Module 23: Git Internals](../23-git-internals/README.md) | [Next: Module 25: Parsing & the SQL Engine →](../25-parsing-sql-engine/README.md)
+[← Previous: Module 23: Git Internals](../28-git-internals/README.md) | [Next: Module 25: Parsing & the SQL Engine →](../25-build-parsing-sql-engine/README.md)

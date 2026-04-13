@@ -827,4 +827,4 @@ everything from data structures to operating systems.
 
 ---
 
-[← Previous: Module 04 — Functions & Program Structure](../04-functions-program-structure/README.md) | [Next: Module 06 — Pointers & Arrays →](../06-pointers-arrays/README.md)
+[← Previous: Module 04 — Functions & Program Structure](../04-functions-program-structure/README.md) | [Next: Module 06 — Pointers & Arrays →](../07-pointers-arrays/README.md)

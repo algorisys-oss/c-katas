@@ -896,4 +896,4 @@ make test         # build and run solutions to verify
 
 ---
 
-[← Previous: Module 06 — Pointers & Arrays](../06-pointers-arrays/README.md) | [Next: Module 08 — Mastering Memory Management →](../08-mastering-memory-management/README.md)
+[← Previous: Module 06 — Pointers & Arrays](../07-pointers-arrays/README.md) | [Next: Module 08 — Mastering Memory Management →](../30-mastering-memory-management/README.md)

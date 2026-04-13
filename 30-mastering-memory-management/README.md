@@ -542,4 +542,4 @@ make test         # build and run solutions to verify
 
 ---
 
-[← Previous: Module 07 — Dynamic Memory](../07-dynamic-memory/README.md) | [Next: Module 09 — Structs, Unions & Compound Types →](../09-structs-unions-compound-types/README.md)
+[← Previous: Module 07 — Dynamic Memory](../08-dynamic-memory/README.md) | [Next: Module 09 — Structs, Unions & Compound Types →](../09-structs-unions-compound-types/README.md)
